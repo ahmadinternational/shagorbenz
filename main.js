@@ -415,9 +415,8 @@ if (cartCount) {
     mutations.forEach((mutation) => {
       if (mutation.type === 'childList') {
         const newCount = cartCount.innerText.trim();
-        if (newCount !== "" && newCount !== "0" && typeof showToast === 'function') {
-          showToast("প্রোডাক্টটি সফলভাবে কার্টে যোগ করা হয়েছে!");
-        }
+        
+        
       }
     });
   });
