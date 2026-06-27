@@ -7,215 +7,202 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="./style.css">
   <meta name="google-site-verification" content="TAt7E6I5k3s1qi-ywL32gV8fQbrI3aRaqJAwz-O_Btc" />
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-HSFDQ2950J"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-HSFDQ2950J');
-</script>
-
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HSFDQ2950J"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HSFDQ2950J');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Noto+Sans+Bengali:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+
 <div id="pageLoader" class="page-loader">
   <div class="loader-content">
     <div class="cyber-spinner"></div>
     <p>প্রোডাক্ট লোড হচ্ছে, দয়া করে অপেক্ষা করুন...</p>
   </div>
 </div>
-  <header>
-    <div class="logo-container" style="display: flex; align-items: center; gap: 10px;">
-      <img src="/logo.jpeg" alt="SHAGORBENZ Logo" style="height: 50px; width: auto; border-radius: 4px;">
-      <span class="logo-text" style="font-size: 24px; font-weight: bold; color: #00f2fe; letter-spacing: 2px;">SHAGORBENZ</span>
-    </div>
+
+<header>
+  <div class="logo-container header-logo">
+    <img src="/logo.jpeg" alt="SHAGORBENZ Logo" class="logo-img">
+    <span class="logo-text" style="font-size: 24px; font-weight: bold; color: #00f2fe; letter-spacing: 2px;">SHAGORBENZ</span>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <button id="historyBtn" class="history-btn">
+      <span class="material-symbols-outlined">history</span>
+      <span>History</span>
+    </button>
+
     <div class="cart-icon" id="cartBtn">
       <span class="material-symbols-outlined" style="font-size: 24px;">shopping_cart</span>
       <span id="cartCount" class="cart-count">0</span>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <div class="slider-container">
-      <div class="slider" id="imageSlider">
-        <div class="slide">
-          <img src="https://iili.io/CuY7Zj2.png" alt="Banner 1">
-        </div>
-        <div class="slide">
-          <img src="https://iili.io/CuY1TLQ.png" alt="Banner 2">
-        </div>
-        <div class="slide">
-          <img src="https://iili.io/CuYv8EF.png" alt="Banner 3">
-        </div>
-      </div>
+<main>
+  <div class="slider-container">
+  <div class="slider" id="imageSlider">
+    <div class="slide">
+      <img src="https://iili.io/CuY7Zj2.png" alt="Banner 1">
     </div>
-   <!-- লেখাটিকে একটি div বা section এর মাঝখানে (center) রাখবেন -->
-<div class="section-title-container">
+    <div class="slide">
+      <img src="https://iili.io/CRFBG3B.png" alt="Banner 2">
+    </div>
+    <div class="slide">
+      <img src="https://iili.io/CuY1TLQ.png" alt="Banner 3">
+    </div>
+  </div>
+</div>
+
+  <div class="section-title-container">
     <h2 class="premium-title">আমাদের প্রিমিয়াম প্রোডাক্টস</h2>
-</div>
+  </div>
+
   <div class="search-wrapper-premium">
-  <div class="search-input-box">
-    <span class="material-symbols-outlined search-icon-glow">search</span>
-    <input type="text" id="productSearch" placeholder="পছন্দের গ্যাজেট বা প্রোডাক্টটি খুঁজুন...">
-    <div class="search-border-glow"></div>
+    <div class="search-input-box">
+      <span class="material-symbols-outlined search-icon-glow">search</span>
+      <input type="text" id="productSearch" placeholder="পছন্দের গ্যাজেট বা প্রোডাক্টটি খুঁজুন...">
+      <div class="search-border-glow"></div>
+    </div>
   </div>
-</div>
-</div>
-    <!-- ক্যাটাগরি ফিল্টার সেকশন -->
-<div class="category-container" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;">
-  <button class="cat-btn active" data-category="all">সব প্রোডাক্ট</button>
-  <button class="cat-btn" data-category="Phone">ফোন</button>
-  <button class="cat-btn" data-category="Smartwatch">স্মার্টওয়াচ</button>
-  <button class="cat-btn" data-category="Power Bank">পাওয়ার ব্যাংক</button>
-  <button class="cat-btn" data-category="Earbuds">ইয়ারবাডস</button>
-  <button class="cat-btn" data-category="Laptop">ল্যাপটপ</button>
-  <button class="cat-btn" data-category="Tablet">ট্যাবলেট</button>
-  <button class="cat-btn" data-category="Router">রাউটার</button>
-  <button class="cat-btn" data-category="Headphone">হেডফোন</button>
-  <button class="cat-btn" data-category="Keyboard">কিবোর্ড</button>
-  <button class="cat-btn" data-category="Charger">চার্জার</button>
-  <button class="cat-btn" data-category="Pendrive">পেনড্রাইভ</button>
-  <button class="cat-btn" data-category="Mouse">মাউস</button>
-</div>
+
+  <div class="category-container">
+    <button class="cat-btn active" data-category="all">সব প্রোডাক্ট</button>
+    <button class="cat-btn" data-category="Phone">ফোন</button>
+    <button class="cat-btn" data-category="Smartwatch">স্মার্টওয়াচ</button>
+    <button class="cat-btn" data-category="Power Bank">পাওয়ার ব্যাংক</button>
+    <button class="cat-btn" data-category="Earbuds">ইয়ারবাডস</button>
+    <button class="cat-btn" data-category="Laptop">ল্যাপটপ</button>
+    <button class="cat-btn" data-category="Tablet">ট্যাবলেট</button>
+    <button class="cat-btn" data-category="Router">রাউটার</button>
+    <button class="cat-btn" data-category="Headphone">হেডফোন</button>
+    <button class="cat-btn" data-category="Keyboard">কিবোর্ড</button>
+    <button class="cat-btn" data-category="Charger">চার্জার</button>
+    <button class="cat-btn" data-category="Pendrive">পেনড্রাইভ</button>
+    <button class="cat-btn" data-category="Mouse">মাউস</button>
+  </div>
     
-    <div class="product-grid" id="productContainer">
-      <p>প্রোডাক্ট লোড হচ্ছে...</p>
-    </div>
-  </main>
+  <div class="product-grid" id="productContainer">
+    <p>প্রোডাক্ট লোড হচ্ছে...</p>
+  </div>
+</main>
 
-  <div class="cart-sidebar" id="cartSidebar">
-    <div class="cart-slider-wrapper" id="cartSliderWrapper">
-      
-      <div class="cart-slide" id="slide1">
-        <div class="cart-header">
-          <h3>🛍️ আপনার কার্ট</h3>
-          <button id="closeCart">✕</button>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-slider-wrapper" id="cartSliderWrapper">
+    <div class="cart-slide" id="slide1">
+      <div class="cart-header">
+        <h3>🛍️ আপনার কার্ট</h3>
+        <button id="closeCart">✕</button>
+      </div>
+      <div id="cartItems"></div>
+      <div class="delivery-selection-wrapper" style="margin: 20px 15px 5px 15px;">
+        <label for="deliveryArea" style="display: block; margin-bottom: 8px; color: #fff; font-weight: bold; font-size: 14px; text-align: left;">
+          ডেলিভারি এলাকা সিলেক্ট করুন *
+        </label>
+        <select id="deliveryArea" class="custom-select-input" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: #1a1a1a; color: #fff; font-size: 14px; outline: none; cursor: pointer;">
+          <option value="inside" data-charge="60">ঢাকার ভিতরে </option>
+          <option value="outside" data-charge="120">ঢাকার বাইরে </option>
+        </select>
+      </div>
+      <div class="bill-details-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; margin: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #b0b8c4; font-size: 14px;">
+          <span>প্রোডাক্ট মূল্য:</span>
+          <span><span id="subTotalAmount">0</span> ৳</span>
         </div>
-        
-        <div id="cartItems"></div>
-        
-        <div class="delivery-selection-wrapper" style="margin: 20px 15px 5px 15px;">
-          <label for="deliveryArea" style="display: block; margin-bottom: 8px; color: #fff; font-weight: bold; font-size: 14px; text-align: left;">
-            ডেলিভারি এলাকা সিলেক্ট করুন *
-          </label>
-          <select id="deliveryArea" class="custom-select-input" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #1a1a1a; color: #fff; font-size: 14px; outline: none; cursor: pointer;">
-            <option value="inside" data-charge="60">ঢাকার ভিতরে (৬০ ৳)</option>
-            <option value="outside" data-charge="120">ঢাকার বাইরে (১২০ ৳)</option>
-          </select>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #b0b8c4; font-size: 14px;">
+          <span>ডেলিভারি চার্জ:</span>
+          <span><span id="deliveryChargeAmount">60</span> ৳</span>
         </div>
-
-        <div class="bill-details-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; margin: 15px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #b0b8c4; font-size: 14px;">
-            <span>প্রোডাক্ট মূল্য:</span>
-            <span><span id="subTotalAmount">0</span> ৳</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #b0b8c4; font-size: 14px;">
-            <span>ডেলিভারি চার্জ:</span>
-            <span><span id="deliveryChargeAmount">60</span> ৳</span>
-          </div>
-          <hr style="border: 0; height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0;">
-          <div style="display: flex; justify-content: space-between; font-size: 16px; color: #fff; font-weight: bold;">
-            <span>সর্বমোট বিল:</span>
-            <span style="color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);"><span id="cartTotalAmount">0</span> ৳</span>
-          </div>
-        </div>
-        
-        <div class="cart-footer">
-          <button type="button" class="checkout-btn" id="goToCheckoutBtn">পরবর্তী ধাপে যান</button>
+        <hr style="border: 0; height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0;">
+        <div style="display: flex; justify-content: space-between; font-size: 16px; color: #fff; font-weight: bold;">
+          <span>সর্বমোট বিল:</span>
+          <span style="color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);"><span id="cartTotalAmount">0</span> ৳</span>
         </div>
       </div>
+      <div class="cart-footer">
+        <button type="button" class="checkout-btn" id="goToCheckoutBtn">পরবর্তী ধাপে যান</button>
+      </div>
+    </div>
 
-      <div class="cart-slide" id="slide2">
-  <div class="cart-header">
-    <h3>📋 অর্ডারের তথ্য দিন</h3>
-    <button type="button" id="backToCartBtn" class="back-cart-btn">✕</button>
-  </div>
-        
-        <div class="checkout-form-container">
-          <div class="form-group">
-            <label>আপনার নাম *</label>
-            <input type="text" id="custName" placeholder="সম্পূর্ণ নাম লিখুন">
-          </div>
-          
-          <div class="form-group">
-            <label>ডেলিভারি ঠিকানা *</label>
-            <textarea id="custAddress" rows="3" placeholder="গ্রাম/রোড, থানা, জেলা লিখুন"></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label>মোবাইল নম্বর *</label>
-            <input type="tel" id="custPhone" placeholder="যেমন: 017XXXXXXXX">
-            <span class="error-msg" id="phoneError">সঠিক বাংলাদেশী ১১ ডিজিটের নম্বর দিন</span>
-          </div>
-          
-          <div class="form-group">
-            <label>অতিরিক্ত নোট (ঐচ্ছিক)</label>
-            <textarea id="custNote" rows="2" placeholder="প্রোডাক্ট বা ডেলিভারি নিয়ে কোনো তথ্য থাকলে জানান"></textarea>
-          </div>
+    <div class="cart-slide" id="slide2">
+      <div class="cart-header">
+        <h3>📋 অর্ডারের তথ্য দিন</h3>
+        <button type="button" id="backToCartBtn" class="back-cart-btn">✕</button>
+      </div>
+      <div class="checkout-form-container">
+        <div class="form-group">
+          <label>আপনার নাম *</label>
+          <input type="text" id="custName" placeholder="সম্পূর্ণ নাম লিখুন">
         </div>
-
-        <div class="cart-footer">
-          <button type="button" id="checkoutBtn" class="checkout-btn valid-btn">অর্ডার কনফার্ম করুন</button>
+        <div class="form-group">
+          <label>ডেলিভারি ঠিকানা *</label>
+          <textarea id="custAddress" rows="3" placeholder="পূর্ণ  ঠিকানা  লিখুন (জেলা, থানা, এলাকা)"></textarea>
+        </div>
+        <div class="form-group">
+          <label>মোবাইল নম্বর *</label>
+          <input type="tel" id="custPhone" placeholder="01XXXXXXXXX">
+          <span class="error-msg" id="phoneError">সঠিক বাংলাদেশী ১১ ডিজিটের নম্বর দিন</span>
+        </div>
+        <div class="form-group">
+          <label>অতিরিক্ত নোট (ঐচ্ছিক)</label>
+          <input type="text" id="custNote" placeholder="কোনো বিশেষ নির্দেশনা থাকলে লিখুন">
         </div>
       </div>
-
-    </div>
-  </div>
-
-  <div class="modal" id="productModal">
-    <div class="modal-content">
-      <button class="close-modal" id="closeModal">✕</button>
-      <div class="modal-body">
-        <img id="modalImage" src="" alt="">
-        <div class="modal-info">
-          <h2 id="modalTitle">প্রোডাক্টের নাম</h2>
-          <p class="modal-price" id="modalPrice">০ টাকা</p>
-          <div class="modal-desc-box">
-            <h4>প্রোডাক্ট বিবরণ:</h4>
-            <p id="modalDesc">এখানে বিবরণ দেখাবে...</p>
-          </div>
-          <button id="modalAddBtn" class="add-btn">কার্টে যোগ করুন</button>
-        </div>
+      <div class="cart-footer">
+        <button type="button" id="checkoutBtn" class="checkout-btn">অর্ডার নিশ্চিত করুন</button>
       </div>
     </div>
   </div>
+</div>
 
-  <div id="toastContainer" class="toast-container"></div>
+<div id="productModal" class="success-modal">
+  <div class="success-modal-content">
+    <button type="button" id="closeModal" class="close-modal">✕</button>
+    <img id="modalImage" src="" alt="Product Image" style="width:100%; max-height:250px; object-fit:contain; border-radius:10px;">
+    <h2 id="modalTitle" style="margin-top:15px; color:#fff;"></h2>
+    <p id="modalPrice" style="color:#00f2fe; font-size:18px; font-weight:bold;"></p>
+    <p id="modalDesc" style="color:#aaa; font-size:14px; text-align:left; line-height:1.5; margin:15px 0; max-height:120px; overflow-y:auto;"></p>
+    <button type="button" id="modalAddBtn" class="checkout-btn" style="width:100%;">কার্টে যোগ করুন</button>
+  </div>
+</div>
 
-  <script type="module" src="./main.js"></script>
-  <!-- সুন্দর অর্ডার সাকসেস পপ-আপ -->
 <div id="orderSuccessModal" class="success-modal">
-    <div class="success-modal-content">
-        <div class="success-icon-box">
-            <svg class="success-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle class="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-                <path class="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-            </svg>
-        </div>
-        <h2>ধন্যবাদ!</h2>
-        <p>আপনার অর্ডারটি সফলভাবে নেওয়া হয়েছে।</p>
-        <p class="sub-text">খুব শীঘ্রই আমাদের একজন প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।</p>
-        <button id="closeSuccessBtn" class="success-close-btn">ঠিক আছে</button>
+  <div class="success-modal-content">
+    <div class="success-checkmark">
+      <svg class="success-checkmark-svg" viewBox="0 0 52 52">
+        <circle class="success-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+        <path class="success-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
     </div>
+    <h2>ধন্যবাদ!</h2>
+    <p>আপনার অর্ডারটি সফলভাবে নেওয়া হয়েছে।</p>
+    <p class="sub-text">খুব শীঘ্রই আমাদের একজন প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।</p>
+    <button type="button" id="closeSuccessBtn" class="success-close-btn">ঠিক আছে</button>
+  </div>
 </div>
-<!-- সুন্দর কার্ট খালি নোটিফিকেশন পপ-আপ -->
+
 <div id="emptyCartModal" class="success-modal">
-    <div class="success-modal-content" style="box-shadow: 0 10px 30px rgba(246, 21, 21, 0.15); border-color: #4a2828;">
-        <div class="success-icon-box">
-            <!-- একটি চমৎকার লাল রঙের ওয়ার্নিং/খালি কার্ট আইকন -->
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 70px; height: 70px; margin: 0 auto;">
-                <circle cx="12" cy="12" r="10" stroke="#f61515" stroke-width="2"/>
-                <path d="M12 7V13" stroke="#f61515" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="12" cy="16.5" r="1" fill="#f61515"/>
-            </svg>
-        </div>
-        <h2 style="color: #f61515;">কার্ট খালি!</h2>
-        <p>আপনার কার্টটি বর্তমানে খালি রয়েছে।</p>
-        <p class="sub-text">অর্ডার করতে প্রথমে কার্টে অন্তত একটি প্রোডাক্ট যোগ করুন।</p>
-        <button id="closeEmptyCartBtn" class="success-close-btn" style="background: linear-gradient(135deg, #444, #222); border: 1px solid #444;">ঠিক আছে</button>
-    </div> <!-- এখানে শেষের ব্র্যাকেটটি ফিক্সড করা হয়েছে -->
+  <div class="success-modal-content" style="box-shadow: 0 10px 30px rgba(246, 21, 21, 0.15); border-color: #4a2828;">
+    <div class="success-icon-box">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 70px; height: 70px; margin: 0 auto;">
+        <circle cx="12" cy="12" r="10" stroke="#f61515" stroke-width="2"/>
+        <path d="M12 7V13" stroke="#f61515" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="12" cy="17" r="1" fill="#f61515"/>
+      </svg>
+    </div>
+    <h2 id="emptyCartTitle" style="color: #f61515;">কার্ট খালি!</h2>
+    <p id="emptyCartMessage">আপনার কার্টটি বর্তমানে খালি রয়েছে।</p>
+    <button type="button" id="closeEmptyCartBtn" class="success-close-btn" style="background: #f61515; width: 100%;">ঠিক আছে</button>
+  </div>
 </div>
-</div>
+
+<script type="module" src="./main.js"></script>
 </body>
 </html>
