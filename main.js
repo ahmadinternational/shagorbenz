@@ -695,6 +695,7 @@ function renderHistoryModalContent(modalEl, innerHtmlContent) {
 }
 
 // 🎯 ১৩. হিস্ট্রি মডাল পপআপ দেখানোর লাইভ লজিক (CORS এবং ক্যাশ বাগ ফিক্সড সংস্করণ)
+// 🎯 ১৩. হিস্ট্রি মডাল পপআপ দেখানোর লাইভ লজিক (অনক্লিক অপ্টিমাইজড ও ফাস্ট সংস্করণ)
 const historyBtn = document.getElementById('historyBtn');
 if (historyBtn) {
   historyBtn.addEventListener('click', async () => {
@@ -722,24 +723,29 @@ if (historyBtn) {
       showModal('historyModal');
       
       const sheetWebhookUrl = "https://script.google.com/macros/s/AKfycbwbzm5xrmSdDVkgT8hNoEgYCR61Dztmam8bDjZ8o-6EL_tBW7r_AOKp62mGpCfinzEm/exec";
-      const cacheBuster = `&t=${new Date().getTime()}`; // ওল্ড বা পুরানো ডেটা লোড হওয়া আটকানোর জন্য
-
-      for (let order of orderHistory) {
-        try {
-          // ইউআরএল এর সাথে ক্যাশ বাস্টার যোগ করে লাইভ রিকোয়েস্ট পাঠানো হচ্ছে
-          const response = await fetch(`${sheetWebhookUrl}?orderId=${order.orderId}${cacheBuster}`);
-          
-          if (response.ok) {
-            const resData = await response.json();
-            if (resData && resData.status === "success") {
-              order.status = resData.stat || order.status; 
-              order.courierName = resData.courierName || order.courierName; 
-              order.trackingId = resData.trackingId || order.trackingId; 
+      const cacheBuster = `&t=${new Date().getTime()}`;
+      
+      // ১. সবগুলো অর্ডার আইডি একসাথে কমা (,) দিয়ে যুক্ত করা হচ্ছে
+      const allOrderIds = orderHistory.map(order => order.orderId).join(",");
+      
+      try {
+        // ২. আলাদা আলাদা লুপ না চালিয়ে মাত্র ১টি রিকোয়েস্টে সব আইডি পাঠানো হচ্ছে
+        const response = await fetch(`${sheetWebhookUrl}?orderIds=${allOrderIds}${cacheBuster}`);
+        const resData = await response.json();
+        
+        if (resData && resData.status === "success" && resData.data) {
+          // ৩. গুগল শিটের ম্যাপ থেকে ডেটা নিয়ে লোকাল অবজেক্ট একবারে আপডেট
+          orderHistory.forEach(order => {
+            const updatedData = resData.data[order.orderId];
+            if (updatedData) {
+              order.status = updatedData.stat; 
+              order.courierName = updatedData.courierName; 
+              order.trackingId = updatedData.trackingId; 
             }
-          }
-        } catch (err) {
-          console.error("Live status sync failed for: " + order.orderId, err);
+          });
         }
+      } catch (err) {
+        console.error("Live status sync failed", err);
       }
       
       localStorage.setItem('userOrderHistory', JSON.stringify(orderHistory));
