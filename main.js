@@ -693,12 +693,10 @@ function renderHistoryModalContent(modalEl, innerHtmlContent) {
     closeHistoryBtn.addEventListener('click', () => hideModal(modalEl));
   }
 }
-
-// 🎯 ১৩. হিস্ট্রি মডাল পপআপ দেখানোর লাইভ লজিক (CORS এবং ক্যাশ বাগ ফিক্সড সংস্করণ)
-// 🎯 ১৩. হিস্ট্রি মডাল পপআপ দেখানোর লাইভ লজিক (অনক্লিক অপ্টিমাইজড ও ফাস্ট সংস্করণ)
+// 🎯 ১৩. হিস্ট্রি মডাল পপআপ দেখানোর লাইভ লজিক (আল্ট্রা-ফাস্ট সংস্করণ)
 const historyBtn = document.getElementById('historyBtn');
 if (historyBtn) {
-  historyBtn.addEventListener('click', async () => {
+  historyBtn.addEventListener('click', () => {
     let historyModal = document.getElementById('historyModal');
     
     if (!historyModal) {
@@ -712,144 +710,162 @@ if (historyBtn) {
 
     if (orderHistory.length === 0) {
       const emptyHtml = `
-        <div style="padding: 40px 20px; color:#888;">
+        <div style="padding: 40px 20px; color:#888; text-align: center;">
           <span class="material-symbols-outlined" style="font-size: 48px; color: #ff3b30; margin-bottom: 10px;">production_quantity_limits</span>
           <p style="margin: 0; font-size: 16px;">আপনার আগের কোনো অর্ডারের রেকর্ড পাওয়া যায়নি!</p>
         </div>`;
       renderHistoryModalContent(historyModal, emptyHtml);
       showModal('historyModal');
-    } else {
-      buildHistoryList(orderHistory);
-      showModal('historyModal');
-      
+      return;
+    }
+
+    // লোকাল ডাটা দিয়ে মডাল সাথে সাথে ওপেন
+    buildHistoryList(orderHistory);
+    showModal('historyModal');
+    
+    // ব্যাকগ্রাউন্ডে আল্ট্রা-ফাস্ট প্যারালাল সিঙ্ক
+    (async () => {
+      // ⚠️ এখানে আপনার নতুন ডেপ্লয় করা Web App URL-টি বসাবেন
       const sheetWebhookUrl = "https://script.google.com/macros/s/AKfycbwbzm5xrmSdDVkgT8hNoEgYCR61Dztmam8bDjZ8o-6EL_tBW7r_AOKp62mGpCfinzEm/exec";
-      const cacheBuster = `&t=${new Date().getTime()}`;
-      
-      // ১. সবগুলো অর্ডার আইডি একসাথে কমা (,) দিয়ে যুক্ত করা হচ্ছে
+      const cacheBuster = `&nocache=${Math.random()}`; // ক্যাশ বাইপাস করার জন্য স্ট্রং ট্রিক
       const allOrderIds = orderHistory.map(order => order.orderId).join(",");
       
       try {
-        // ২. আলাদা আলাদা লুপ না চালিয়ে মাত্র ১টি রিকোয়েস্টে সব আইডি পাঠানো হচ্ছে
-        const response = await fetch(`${sheetWebhookUrl}?orderIds=${allOrderIds}${cacheBuster}`);
+        const response = await fetch(`${sheetWebhookUrl}?orderIds=${allOrderIds}${cacheBuster}`, {
+          method: 'GET',
+          mode: 'cors',
+          headers: { 'Accept': 'application/json' }
+        });
         const resData = await response.json();
         
         if (resData && resData.status === "success" && resData.data) {
-          // ৩. গুগল শিটের ম্যাপ থেকে ডেটা নিয়ে লোকাল অবজেক্ট একবারে আপডেট
+          let hasChanges = false;
+
           orderHistory.forEach(order => {
             const updatedData = resData.data[order.orderId];
             if (updatedData) {
-              order.status = updatedData.stat; 
-              order.courierName = updatedData.courierName; 
-              order.trackingId = updatedData.trackingId; 
+              if (order.status !== updatedData.stat || order.courierName !== updatedData.courierName || order.trackingId !== updatedData.trackingId) {
+                order.status = updatedData.stat; 
+                order.courierName = updatedData.courierName; 
+                order.trackingId = updatedData.trackingId; 
+                hasChanges = true;
+              }
             }
           });
+          
+          if (hasChanges) {
+            localStorage.setItem('userOrderHistory', JSON.stringify(orderHistory));
+            buildHistoryList(orderHistory);
+          }
         }
       } catch (err) {
-        console.error("Live status sync failed", err);
+        console.error("Background live status sync failed", err);
       }
-      
-      localStorage.setItem('userOrderHistory', JSON.stringify(orderHistory));
-      buildHistoryList(orderHistory);
-    }
-
-    function buildHistoryList(currentOrders) {
-      let html = `<div style="max-height: 380px; overflow-y: auto; text-align: left; margin-top: 15px; padding-right: 5px;">`;
-      currentOrders.forEach((order) => {
-        const currentStat = order.status ? order.status.trim() : "Pending";
-        
-        let statusColor = "#ffcc00"; 
-        let statusBg = "rgba(255, 204, 0, 0.1)";
-        let statusTextBengali = "পেন্ডিং";
-
-        if (currentStat === "Processing") {
-          statusColor = "#00f2fe";
-          statusBg = "rgba(0, 242, 254, 0.1)";
-          statusTextBengali = "প্রসেসিং";
-        } else if (currentStat === "Delivered") {
-          statusColor = "#4cd964";
-          statusBg = "rgba(76, 217, 100, 0.1)";
-          statusTextBengali = "ডেলিভার্ড";
-        } else if (currentStat === "Cancelled" || currentStat === "Deleted By Customer") {
-          statusColor = "#ff3b30";
-          statusBg = "rgba(255, 59, 48, 0.1)";
-          statusTextBengali = "বাতিল";
-        }
-
-        const isPending = currentStat === "Pending";
-        const canDelete = (currentStat === "Delivered" || currentStat === "Cancelled" || currentStat === "Deleted By Customer");
-
-        let courierHtml = '';
-        if (order.courierName || order.trackingId) {
-          courierHtml = `
-            <div style="background: rgba(0, 242, 254, 0.05); border: 1px dashed rgba(0, 242, 254, 0.3); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #fff; margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
-              ${order.courierName ? `<div>🚚 <b>কুরিয়ার:</b> ${order.courierName}</div>` : ''}
-              ${order.trackingId ? `<div>📦 <b>ট্র্যাকিং আইডি:</b> <span style="color:#00f2fe; font-family: monospace; font-weight:bold;">${order.trackingId}</span></div>` : ''}
-            </div>
-          `;
-        }
-
-        html += `
-          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: inset 0 0 10px rgba(0,242,254,0.02); position: relative;">
-            
-            ${canDelete ? `
-              <button type="button" onclick="window.deleteHistoryOrder('${order.orderId}')" style="position: absolute; right: 12px; bottom: 15px; background: transparent; color: #ff3b30; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; border-radius: 4px; transition: 0.2s;" title="হিস্ট্রি থেকে মুছুন">
-                <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
-              </button>
-            ` : ''}
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 25px;">
-              <strong style="color: #00f2fe; font-size: 14px; letter-spacing: 0.5px;">🆔 ${order.orderId}</strong>
-              <span style="color: ${statusColor}; background: ${statusBg}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid ${statusColor}40;">
-                ⏳ ${statusTextBengali}
-              </span>
-            </div>
-
-            <div style="color: #888; font-size: 12px; margin-bottom: 10px;">
-              ⏰ ${order.date}
-            </div>
-            
-            <div style="margin-bottom: 12px;">
-              <p style="margin: 0 0 5px 0; color: #aaa; font-size: 13px;"><b>ক্রয়কৃত প্রোডাক্টসমূহ:</b></p>
-              <p style="margin: 0; color: #fff; font-size: 14px; line-height: 1.4; padding-left: 8px; border-left: 2px solid #00f2fe;">
-                ${order.items}
-              </p>
-            </div>
-
-            ${courierHtml}
-            
-            <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #b0b8c4; border: 1px solid rgba(255,255,255,0.03); margin-top: 10px; margin-bottom: 10px; width: calc(100% - 30px);">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span>প্রোডাক্ট মূল্য:</span>
-                <span style="color:#fff;">${order.subTotal || 0} ৳</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span>ডেলিভারি চার্জ:</span>
-                <span style="color:#fff;">${order.deliveryCharge || 0} ৳</span>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-weight: bold; color: #00f2fe; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 4px; font-size: 14px;">
-                <span>সর্বমোট বিল:</span>
-                <span style="color: #00f2fe;">${order.total || 0} ৳</span>
-              </div>
-            </div>
-
-            ${isPending ? `
-              <div style="display: flex; gap: 8px; width: calc(100% - 35px); margin-top: 5px;">
-                <button type="button" onclick="window.editPendingOrder('${order.orderId}')" style="flex: 1; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #000; font-weight: bold; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">edit_note</span> পরিবর্তন করুন
-                </button>
-                <button type="button" onclick="window.cancelPendingOrder('${order.orderId}')" style="flex: 1; background: linear-gradient(135deg, #ff3b30, #b30000); color: #fff; font-weight: bold; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
-                  <span class="material-symbols-outlined" style="font-size: 16px;">cancel</span> বাতিল করুন
-                </button>
-              </div>
-            ` : ''}
-
-          </div>
-        `;
-      });
-      html += `</div>`;
-      renderHistoryModalContent(historyModal, html);
-    }
+    })();
   });
+}
+
+function buildHistoryList(currentOrders) {
+  let historyModal = document.getElementById('historyModal');
+  if (!historyModal) return;
+
+  let html = `<div style="max-height: 380px; overflow-y: auto; text-align: left; margin-top: 15px; padding-right: 5px;">`;
+  
+  currentOrders.forEach((order) => {
+    const currentStat = order.status ? order.status.trim() : "Pending";
+    
+    let statusColor = "#ffcc00"; 
+    let statusBg = "rgba(255, 204, 0, 0.1)";
+    let statusTextBengali = "পেন্ডিং";
+
+    if (currentStat === "Processing") {
+      statusColor = "#00f2fe";
+      statusBg = "rgba(0, 242, 254, 0.1)";
+      statusTextBengali = "প্রসেসিং";
+    } else if (currentStat === "Delivered") {
+      statusColor = "#4cd964";
+      statusBg = "rgba(76, 217, 100, 0.1)";
+      statusTextBengali = "ডেলিভার্ড";
+    } else if (currentStat === "Cancelled" || currentStat === "Deleted By Customer") {
+      statusColor = "#ff3b30";
+      statusBg = "rgba(255, 59, 48, 0.1)";
+      statusTextBengali = "বাতিল";
+    }
+
+    const isPending = currentStat === "Pending";
+    const canDelete = (currentStat === "Delivered" || currentStat === "Cancelled" || currentStat === "Deleted By Customer");
+
+    let courierHtml = '';
+    if (order.courierName || order.trackingId) {
+      courierHtml = `
+        <div style="background: rgba(0, 242, 254, 0.05); border: 1px dashed rgba(0, 242, 254, 0.3); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #fff; margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+          ${order.courierName ? `<div>🚚 <b>কুরিয়ার:</b> ${order.courierName}</div>` : ''}
+          ${order.trackingId ? `<div>📦 <b>ট্র্যাকিং আইডি:</b> <span style="color:#00f2fe; font-family: monospace; font-weight:bold;">${order.trackingId}</span></div>` : ''}
+        </div>
+      `;
+    }
+
+    html += `
+      <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(0, 242, 254, 0.15); border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: inset 0 0 10px rgba(0,242,254,0.02); position: relative;">
+        
+        ${canDelete ? `
+          <button type="button" onclick="window.deleteHistoryOrder('${order.orderId}')" style="position: absolute; right: 12px; bottom: 15px; background: transparent; color: #ff3b30; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; border-radius: 4px; transition: 0.2s;" title="হিস্ট্রি থেকে মুছুন">
+            <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+          </button>
+        ` : ''}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 25px;">
+          <strong style="color: #00f2fe; font-size: 14px; letter-spacing: 0.5px;">🆔 ${order.orderId}</strong>
+          <span style="color: ${statusColor}; background: ${statusBg}; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; border: 1px solid ${statusColor}40;">
+            ⏳ ${statusTextBengali}
+          </span>
+        </div>
+
+        <div style="color: #888; font-size: 12px; margin-bottom: 10px;">
+          ⏰ ${order.date}
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+          <p style="margin: 0 0 5px 0; color: #aaa; font-size: 13px;"><b>ক্রয়কৃত প্রোডাক্টসমূহ:</b></p>
+          <p style="margin: 0; color: #fff; font-size: 14px; line-height: 1.4; padding-left: 8px; border-left: 2px solid #00f2fe;">
+            ${order.items}
+          </p>
+        </div>
+
+        ${courierHtml}
+        
+        <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #b0b8c4; border: 1px solid rgba(255,255,255,0.03); margin-top: 10px; margin-bottom: 10px; width: calc(100% - 30px);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>প্রোডাক্ট মূল্য:</span>
+            <span style="color:#fff;">${order.subTotal || 0} ৳</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span>ডেলিভারি চার্জ:</span>
+            <span style="color:#fff;">${order.deliveryCharge || 0} ৳</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: bold; color: #00f2fe; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 4px; font-size: 14px;">
+            <span>সর্বমোট বিল:</span>
+            <span style="color: #00f2fe;">${order.total || 0} ৳</span>
+          </div>
+        </div>
+
+        ${isPending ? `
+          <div style="display: flex; gap: 8px; width: calc(100% - 35px); margin-top: 5px;">
+            <button type="button" onclick="window.editPendingOrder('${order.orderId}')" style="flex: 1; background: linear-gradient(135deg, #00f2fe, #4facfe); color: #000; font-weight: bold; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">edit_note</span> পরিবর্তন করুন
+            </button>
+            <button type="button" onclick="window.cancelPendingOrder('${order.orderId}')" style="flex: 1; background: linear-gradient(135deg, #ff3b30, #b30000); color: #fff; font-weight: bold; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">cancel</span> বাতিল করুন
+            </button>
+          </div>
+        ` : ''}
+
+      </div>
+    `;
+  });
+  
+  html += `</div>`;
+  renderHistoryModalContent(historyModal, html);
 }
 // প্রজেক্ট রান করা
 init();
