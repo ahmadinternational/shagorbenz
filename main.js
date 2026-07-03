@@ -983,7 +983,7 @@ function setupEventListeners() {
       showModal('orderSuccessModal');
       // Send push notification
 if (typeof window.sendOrderNotification === 'function') {
-  window.sendOrderNotification(orderId, finalBill);
+  window.sendOrderNotification(orderId,total);
 }
       document.getElementById('orderSuccessModal').style.display = 'flex';
 
