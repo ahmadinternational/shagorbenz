@@ -1,42 +1,144 @@
-// আপনার গুগল শিটের আইডি এবং পাবলিশড লিংক
-const sheetId = '1qRfg__n-9LV_lUVvfTgQ46-D2yYtEm6T1C45ehU3Lyg';
-const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+// ============================================================
+// products.js — SHAGORBENZ Product Data Fetcher
+// ============================================================
+
+const SHEET_ID = '1qRfg__n-9LV_lUVvfTgQ46-D2yYtEm6T1C45ehU3Lyg';
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+const FETCH_TIMEOUT_MS = 10000;
+const FALLBACK_IMAGE = 'https://via.placeholder.com/250';
+
+const COLUMN = {
+    TITLE: 0,
+    PRICE: 1,
+    IMAGE: 2,
+    CATEGORY: 3,
+    STOCK: 5,
+    DESCRIPTION: 6,
+    OLD_PRICE: 7
+};
+
+function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+            if (char === '"' && next === '"') {
+                field += '"';
+                i++;
+            } else if (char === '"') {
+                inQuotes = false;
+            } else {
+                field += char;
+            }
+            continue;
+        }
+
+        if (char === '"') {
+            inQuotes = true;
+        } else if (char === ',') {
+            row.push(field);
+            field = '';
+        } else if (char === '\r') {
+            // ignore
+        } else if (char === '\n') {
+            row.push(field);
+            rows.push(row);
+            row = [];
+            field = '';
+        } else {
+            field += char;
+        }
+    }
+
+    if (field.length > 0 || row.length > 0) {
+        row.push(field);
+        rows.push(row);
+    }
+
+    return rows;
+}
+
+const Sanitize = {
+    text(value, fallback = '') {
+        if (value === undefined || value === null) return fallback;
+        const cleaned = String(value).trim();
+        return cleaned.length > 0 ? cleaned : fallback;
+    },
+    number(value, fallback = 0) {
+        if (value === undefined || value === null) return fallback;
+        const cleaned = String(value).replace(/[^\d.-]/g, '');
+        const parsed = Number(cleaned);
+        return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+    },
+    integer(value, fallback = 0) {
+        const parsed = Sanitize.number(value, NaN);
+        return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
+    },
+    category(value) {
+        return Sanitize.text(value, '').toLowerCase();
+    }
+};
+
+function rowToProduct(row, index) {
+    const title = Sanitize.text(row[COLUMN.TITLE]);
+    if (!title) return null;
+
+    return {
+        id: index.toString(),
+        title,
+        price: Sanitize.number(row[COLUMN.PRICE], 0),
+        image: Sanitize.text(row[COLUMN.IMAGE], FALLBACK_IMAGE),
+        category: Sanitize.category(row[COLUMN.CATEGORY]),
+        stock: row[COLUMN.STOCK] !== undefined && row[COLUMN.STOCK] !== ''
+            ? Sanitize.integer(row[COLUMN.STOCK], 999)
+            : 999,
+        description: Sanitize.text(row[COLUMN.DESCRIPTION], 'বিবরণ নেই।'),
+        oldPrice: Sanitize.number(row[COLUMN.OLD_PRICE], 0)
+    };
+}
+
+async function fetchWithTimeout(url, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) {
+            throw new Error(`Sheet fetch failed with status ${response.status}`);
+        }
+        return response;
+    } finally {
+        clearTimeout(timer);
+    }
+}
 
 export async function fetchProducts() {
-  try {
-    const response = await fetch(csvUrl);
-    const csvText = await response.text();
-    
-    // 🌟 ফিক্স: অদৃশ্য \r ক্যারেক্টার রিমুভ করে ক্লিন লাইন ব্রেক করা হলো
-    const cleanText = csvText.replace(/\r/g, '');
-    const rows = cleanText.split('\n').map(row => {
-      // এই রেগুলার এক্সপ্রেশনটি কমার ভেতর কমা (যেমন ডেসক্রিপশনের কমা) থাকলে তা হ্যান্ডেল করবে
-      return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-    });
+    try {
+        const response = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
+        const csvText = await response.text();
 
-    const products = [];
-    
-    // row ১ থেকে শুরু করছি কারণ row ০ হচ্ছে হেডার
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row[0] || row[0].trim() === "") continue; // খালি সারি থাকলে বাদ দিবে
-      
-      // আপনার শিটের কলাম পজিশন অনুযায়ী ডেটা ম্যাপিং (০ = Product Name, ১ = Price, ২ = Img URL)
-      products.push({
-        id: i.toString(), // প্রতিটি প্রোডাক্টের জন্য ১, ২, ৩ করে আইডি জেনারেট হবে
-        title: row[0] ? row[0].replace(/"/g, '').trim() : "No Title",
-        price: row[1] ? row[1].trim() : "0",
-        image: row[2] ? row[2].replace(/"/g, '').trim() : "https://via.placeholder.com/250",
-        
-        // 🌟 জাস্ট এই দুটি লাইন এখন নিখুঁতভাবে ক্যাটাগরি ও ডেসক্রিপশন রিড করবে
-        category: row[3] ? row[3].replace(/"/g, '').trim().toLowerCase() : "", // ৪ নম্বর কলাম (Category)
-        description: row[6] ? row[6].replace(/"/g, '').trim() : "এই প্রোডাক্টটির কোনো বিবরণ দেওয়া নেই।" // ৭ নম্বর কলাম (Description)
-      });
+        if (!csvText || !csvText.trim()) {
+            console.warn('Product sheet returned empty content');
+            return [];
+        }
+
+        const rows = parseCSV(csvText);
+        const dataRows = rows.slice(1);
+
+        return dataRows
+            .map((row, idx) => rowToProduct(row, idx + 1))
+            .filter(Boolean);
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.error('Product sheet request timed out');
+        } else {
+            console.error('Google Sheet error:', error);
+        }
+        return [];
     }
-    
-    return products;
-  } catch (error) {
-    console.error("গুগল শিট থেকে ডেটা আনতে সমস্যা হয়েছে:", error);
-    return [];
-  }
 }
