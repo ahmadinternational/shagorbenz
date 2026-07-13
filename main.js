@@ -1,6 +1,6 @@
 // ============================================================
 // main.js — SHAGORBENZ Premium E-Commerce
-// Full product page panel, delivery moved, centered icons, history info
+// Google Sheets version · Checkout bill & centered empty cart
 // ============================================================
 
 import { fetchProducts } from './products.js';
@@ -287,6 +287,8 @@ const CartManager = {
         const delivery = Utils.getDeliveryCharge();
         const discount = Utils.calculateDiscount(subtotal, state.appliedCoupon);
         const total = subtotal + delivery - discount;
+
+        // Update slide 1 (cart)
         document.getElementById('subTotalAmount').textContent = subtotal;
         document.getElementById('deliveryChargeAmount').textContent = delivery;
         document.getElementById('cartTotalAmount').textContent = total;
@@ -298,6 +300,24 @@ const CartManager = {
         const couponLabel = document.getElementById('couponCodeLabel');
         if (couponLabel && state.appliedCoupon) {
             couponLabel.textContent = state.appliedCoupon.code;
+        }
+
+        // Update slide 2 (checkout)
+        const sub2 = document.getElementById('subTotalAmount2');
+        const del2 = document.getElementById('deliveryChargeAmount2');
+        const tot2 = document.getElementById('cartTotalAmount2');
+        const discRow2 = document.getElementById('discountRow2');
+        const discAmt2 = document.getElementById('discountAmount2');
+        const couponLabel2 = document.getElementById('couponCodeLabel2');
+        if (sub2) sub2.textContent = subtotal;
+        if (del2) del2.textContent = delivery;
+        if (tot2) tot2.textContent = total;
+        if (discRow2) {
+            discRow2.style.display = discount > 0 ? 'flex' : 'none';
+            if (discAmt2) discAmt2.textContent = discount;
+        }
+        if (couponLabel2 && state.appliedCoupon) {
+            couponLabel2.textContent = state.appliedCoupon.code;
         }
     }
 };
@@ -580,7 +600,6 @@ const ProductManager = {
             icon.style.fontVariationSettings = isFav ? "'FILL' 1" : "'FILL' 0";
         }
 
-        // Open the detail panel
         document.getElementById('productDetailPanel').classList.add('open');
         document.getElementById('productDetailOverlay').classList.add('open');
     },
@@ -1031,6 +1050,8 @@ function initEvents() {
         if (!state.cart.length) {
             Modal.show('emptyCartModal');
         } else {
+            // Ensure totals are updated before sliding
+            CartManager.renderSidebar();
             document.getElementById('cartSliderWrapper').style.transform = 'translateX(-50%)';
         }
     });

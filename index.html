@@ -83,8 +83,8 @@
         <section class="hero">
             <div class="slider-container">
                 <div class="slider" id="imageSlider">
-                    <div class="slide"><img src="https://iili.io/CuY7Zj2.png" alt="Banner 1" loading="eager" /></div>
-                    <div class="slide"><img src="https://iili.io/CRFBG3B.png" alt="Banner 2" loading="lazy" /></div>
+                    <div class="slide"><img src="https://iili.io/CEexj4t.png" alt="Banner 1" loading="eager" /></div>
+                    <div class="slide"><img src="https://iili.io/CEeOb2I.png" alt="Banner 2" loading="lazy" /></div>
                     <div class="slide"><img src="https://iili.io/CuY1TLQ.png" alt="Banner 3" loading="lazy" /></div>
                 </div>
                 <div class="slider-dots" id="sliderDots">
@@ -213,6 +213,7 @@
                     </div>
 
                     <div class="checkout-form">
+                        <!-- Delivery area moved here -->
                         <div class="option-group">
                             <label for="deliveryArea">ডেলিভারি এলাকা</label>
                             <select id="deliveryArea" class="select-input">
@@ -240,6 +241,17 @@
                         </div>
                     </div>
 
+                    <!-- Bill summary on checkout slide -->
+                    <div class="bill-summary checkout-bill">
+                        <div class="bill-row"><span>প্রোডাক্ট মূল্য</span><span id="subTotalAmount2">0</span> ৳</div>
+                        <div class="bill-row" id="discountRow2" style="display:none;">
+                            <span>ছাড় (<span id="couponCodeLabel2"></span>)</span>
+                            <span>- <span id="discountAmount2">0</span> ৳</span>
+                        </div>
+                        <div class="bill-row"><span>ডেলিভারি চার্জ</span><span id="deliveryChargeAmount2">0</span> ৳</div>
+                        <div class="bill-row total"><span>সর্বমোট</span><span id="cartTotalAmount2">0</span> ৳</div>
+                    </div>
+
                     <button class="btn-primary btn-block" id="checkoutBtn">অর্ডার নিশ্চিত করুন</button>
                 </div>
             </div>
@@ -258,9 +270,9 @@
         </div>
     </div>
 
-    <!-- Empty Cart Modal -->
+    <!-- Empty Cart Modal (centered) -->
     <div id="emptyCartModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content empty-cart-content">
             <span class="material-symbols-outlined empty-icon">remove_shopping_cart</span>
             <h2>কার্ট খালি</h2>
             <p>আপনার কার্টে কোনো প্রোডাক্ট নেই।</p>
