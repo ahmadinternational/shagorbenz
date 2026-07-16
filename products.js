@@ -1,144 +1,110 @@
 // ============================================================
-// products.js — SHAGORBENZ Product Data Fetcher
+// products.js — SHAGORBENZ Product Data Fetcher (Google Sheets)
 // ============================================================
-
 const SHEET_ID = '1qRfg__n-9LV_lUVvfTgQ46-D2yYtEm6T1C45ehU3Lyg';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 const FETCH_TIMEOUT_MS = 10000;
 const FALLBACK_IMAGE = 'https://via.placeholder.com/250';
+const CACHE_KEY = 'shagorbenzProductCache';
+const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes — fresh cache is reused instantly, stale cache is used only as an offline fallback
 
-const COLUMN = {
-    TITLE: 0,
-    PRICE: 1,
-    IMAGE: 2,
-    CATEGORY: 3,
-    STOCK: 5,
-    DESCRIPTION: 6,
-    OLD_PRICE: 7
-};
+const COLUMN = { TITLE: 0, PRICE: 1, IMAGE: 2, CATEGORY: 3, STOCK: 5, DESCRIPTION: 6, OLD_PRICE: 7 };
 
 function parseCSV(text) {
-    const rows = [];
-    let row = [];
-    let field = '';
-    let inQuotes = false;
-
+    const rows = []; let row = [], field = '', inQuotes = false;
     for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const next = text[i + 1];
-
+        const ch = text[i], next = text[i + 1];
         if (inQuotes) {
-            if (char === '"' && next === '"') {
-                field += '"';
-                i++;
-            } else if (char === '"') {
-                inQuotes = false;
-            } else {
-                field += char;
-            }
-            continue;
-        }
-
-        if (char === '"') {
-            inQuotes = true;
-        } else if (char === ',') {
-            row.push(field);
-            field = '';
-        } else if (char === '\r') {
-            // ignore
-        } else if (char === '\n') {
-            row.push(field);
-            rows.push(row);
-            row = [];
-            field = '';
+            if (ch === '"' && next === '"') { field += '"'; i++; }
+            else if (ch === '"') inQuotes = false;
+            else field += ch;
         } else {
-            field += char;
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { row.push(field); field = ''; }
+            else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+            else if (ch !== '\r') field += ch;
         }
     }
-
-    if (field.length > 0 || row.length > 0) {
-        row.push(field);
-        rows.push(row);
-    }
-
+    if (field.length || row.length) { row.push(field); rows.push(row); }
     return rows;
 }
 
 const Sanitize = {
-    text(value, fallback = '') {
-        if (value === undefined || value === null) return fallback;
-        const cleaned = String(value).trim();
-        return cleaned.length > 0 ? cleaned : fallback;
-    },
-    number(value, fallback = 0) {
-        if (value === undefined || value === null) return fallback;
-        const cleaned = String(value).replace(/[^\d.-]/g, '');
-        const parsed = Number(cleaned);
-        return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
-    },
-    integer(value, fallback = 0) {
-        const parsed = Sanitize.number(value, NaN);
-        return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
-    },
-    category(value) {
-        return Sanitize.text(value, '').toLowerCase();
-    }
+    text(v, fb = '') { return v === undefined || v === null ? fb : String(v).trim() || fb; },
+    number(v, fb = 0) { if (v === undefined || v === null) return fb; const c = String(v).replace(/[^\d.-]/g, ''); const p = Number(c); return isFinite(p) && p >= 0 ? p : fb; },
+    integer(v, fb = 0) { const p = Sanitize.number(v, NaN); return isFinite(p) ? Math.trunc(p) : fb; },
+    category(v) { return Sanitize.text(v, '').toLowerCase(); }
 };
 
-function rowToProduct(row, index) {
-    const title = Sanitize.text(row[COLUMN.TITLE]);
-    if (!title) return null;
-
+function rowToProduct(row, idx) {
+    const title = Sanitize.text(row[COLUMN.TITLE]); if (!title) return null;
     return {
-        id: index.toString(),
-        title,
+        id: idx.toString(), title,
         price: Sanitize.number(row[COLUMN.PRICE], 0),
         image: Sanitize.text(row[COLUMN.IMAGE], FALLBACK_IMAGE),
         category: Sanitize.category(row[COLUMN.CATEGORY]),
-        stock: row[COLUMN.STOCK] !== undefined && row[COLUMN.STOCK] !== ''
-            ? Sanitize.integer(row[COLUMN.STOCK], 999)
-            : 999,
+        stock: row[COLUMN.STOCK] !== undefined && row[COLUMN.STOCK] !== '' ? Sanitize.integer(row[COLUMN.STOCK], 999) : 999,
         description: Sanitize.text(row[COLUMN.DESCRIPTION], 'বিবরণ নেই।'),
         oldPrice: Sanitize.number(row[COLUMN.OLD_PRICE], 0)
     };
 }
 
-async function fetchWithTimeout(url, timeoutMs) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+async function fetchWithTimeout(url, ms) {
+    const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), ms);
     try {
-        const response = await fetch(url, { signal: controller.signal });
-        if (!response.ok) {
-            throw new Error(`Sheet fetch failed with status ${response.status}`);
-        }
-        return response;
-    } finally {
-        clearTimeout(timer);
-    }
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res;
+    } finally { clearTimeout(timer); }
+}
+
+function readCache() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.products)) return null;
+        return parsed;
+    } catch { return null; }
+}
+
+function writeCache(products) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ products, savedAt: Date.now() })); } catch { /* storage full/unavailable — non-fatal */ }
 }
 
 export async function fetchProducts() {
+    const cached = readCache();
+    const isFresh = cached && (Date.now() - cached.savedAt) < CACHE_TTL_MS;
+    if (isFresh) {
+        // Serve instantly from a fresh cache, then silently refresh in the background.
+        refreshInBackground();
+        return cached.products;
+    }
     try {
-        const response = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
-        const csvText = await response.text();
-
-        if (!csvText || !csvText.trim()) {
-            console.warn('Product sheet returned empty content');
-            return [];
-        }
-
-        const rows = parseCSV(csvText);
+        const res = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
+        const text = await res.text();
+        if (!text || !text.trim()) return cached?.products || [];
+        const rows = parseCSV(text);
         const dataRows = rows.slice(1);
-
-        return dataRows
-            .map((row, idx) => rowToProduct(row, idx + 1))
-            .filter(Boolean);
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.error('Product sheet request timed out');
-        } else {
-            console.error('Google Sheet error:', error);
-        }
+        const products = dataRows.map((r, i) => rowToProduct(r, i + 1)).filter(Boolean);
+        writeCache(products);
+        return products;
+    } catch (e) {
+        console.error(e);
+        // Network failed — fall back to whatever we have cached, even if stale, so the store still works offline.
+        if (cached?.products?.length) return cached.products;
         return [];
     }
+}
+
+async function refreshInBackground() {
+    try {
+        const res = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
+        const text = await res.text();
+        if (!text || !text.trim()) return;
+        const rows = parseCSV(text);
+        const dataRows = rows.slice(1);
+        const products = dataRows.map((r, i) => rowToProduct(r, i + 1)).filter(Boolean);
+        writeCache(products);
+    } catch { /* silent — user already has cached data on screen */ }
 }
