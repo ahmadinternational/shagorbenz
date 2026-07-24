@@ -8,16 +8,15 @@
     <link rel="canonical" href="https://shagorbenz.com/" />
     <link rel="icon" type="image/jpeg" href="./logo.jpeg" />
     <link rel="apple-touch-icon" href="./logo.jpeg" />
-    <meta name="theme-color" content="#f8f9fc" />
-    <meta name="color-scheme" content="only light" />
-    <meta name="darkreader" content="disable" />
-    <meta name="darkreader-lock" content="1" />
+    <meta name="theme-color" content="#f7f5f0" />
+    <meta name="color-scheme" content="light" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HSFDQ2950J"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -26,6 +25,7 @@
         gtag('config', 'G-HSFDQ2950J');
     </script>
 
+    <!-- OneSignal -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -46,6 +46,15 @@
     </script>
 
     <link rel="stylesheet" href="style.css" />
+
+    <!-- Supabase Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -60,9 +69,20 @@
         <div class="header-inner">
             <div class="logo">
                 <img src="./logo.jpeg" alt="SHAGORBENZ" class="logo-img" />
-                <span class="logo-text">SHAGORBENZ</span>
+                <span class="logo-text">SHAGOR<span>BENZ</span></span>
             </div>
+
+            <div class="header-search">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="productSearch" placeholder="প্রোডাক্ট, ব্র্যান্ড খুঁজুন..." autocomplete="off" aria-label="প্রোডাক্ট খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" />
+                <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="খোঁজ মুছুন" hidden>
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <div id="searchResults" class="search-results" role="listbox"></div>
+            </div>
+
             <div class="header-actions">
+                <!-- ✅ অ্যাডমিন টগল বাটন সরানো হয়েছে -->
                 <button id="wishlistBtn" class="icon-btn" title="পছন্দের তালিকা" aria-label="পছন্দের তালিকা">
                     <span class="material-symbols-outlined">favorite</span>
                     <span class="badge" id="wishlistCount">0</span>
@@ -79,80 +99,74 @@
     </header>
 
     <main id="mainContent">
-        <section class="hero">
-            <div class="slider-container" id="sliderContainer">
-                <div class="slider" id="imageSlider">
-                    <div class="slide"><img src="https://iili.io/CEexj4t.png" alt="অফার ব্যানার ১" loading="eager" /></div>
-                    <div class="slide"><img src="https://iili.io/CEeOb2I.png" alt="অফার ব্যানার ২" loading="lazy" /></div>
-                    <div class="slide"><img src="https://iili.io/CE8qmjR.png" alt="অফার ব্যানার ৩" loading="lazy" /></div>
+        <div class="shop-layout" id="shopSection">
+            <div class="filter-overlay" id="filterOverlay"></div>
+            <aside class="filter-panel" id="filterPanel" aria-label="ক্যাটাগরি">
+                <div class="filter-panel-header">
+                    <h3><span class="material-symbols-outlined">category</span>ক্যাটাগরি</h3>
+                    <button id="closeFiltersBtn" class="close-btn" aria-label="বন্ধ করুন">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
-                <button class="slider-nav slider-nav-prev" id="sliderPrev" aria-label="আগের ব্যানার">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button class="slider-nav slider-nav-next" id="sliderNext" aria-label="পরের ব্যানার">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
-                <div class="slider-dots" id="sliderDots" role="tablist" aria-label="ব্যানার নির্বাচন">
-                    <button class="dot active" data-slide="0" role="tab" aria-selected="true" aria-label="ব্যানার ১"></button>
-                    <button class="dot" data-slide="1" role="tab" aria-selected="false" aria-label="ব্যানার ২"></button>
-                    <button class="dot" data-slide="2" role="tab" aria-selected="false" aria-label="ব্যানার ৩"></button>
+                <div class="filter-panel-body">
+                    <div class="filter-group">
+                        <h4 class="filter-group-title">ক্যাটাগরি</h4>
+                        <ul class="filter-list" id="categoryContainer">
+                            <li><button class="filter-item active" data-category="all">
+                                <span class="material-symbols-outlined">apps</span>সকল প্রোডাক্ট
+                            </button></li>
+                        </ul>
+                    </div>
+                    <div class="filter-group">
+                        <h4 class="filter-group-title">মূল্য পরিসীমা</h4>
+                        <ul class="filter-list" id="priceFilterContainer">
+                            <li><button class="filter-item active" data-range="all">সকল মূল্য</button></li>
+                            <li><button class="filter-item" data-range="0-1000">১,০০০৳ এর নিচে</button></li>
+                            <li><button class="filter-item" data-range="1000-3000">১,০০০ – ৩,০০০৳</button></li>
+                            <li><button class="filter-item" data-range="3000-6000">৩,০০০ – ৬,০০০৳</button></li>
+                            <li><button class="filter-item" data-range="6000-plus">৬,০০০৳ এর বেশি</button></li>
+                        </ul>
+                    </div>
+                    <div class="filter-group">
+                        <h4 class="filter-group-title">সাজান</h4>
+                        <select id="sortSelect" class="select-input">
+                            <option value="default">জনপ্রিয়তা</option>
+                            <option value="price-asc">দাম: কম থেকে বেশি</option>
+                            <option value="price-desc">দাম: বেশি থেকে কম</option>
+                            <option value="discount">সর্বোচ্চ ছাড়</option>
+                            <option value="name-asc">নাম: A-Z</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-check">
+                            <input type="checkbox" id="discountOnlyCheck" />
+                            <span>শুধু ছাড়ের প্রোডাক্ট</span>
+                        </label>
+                        <label class="filter-check">
+                            <input type="checkbox" id="inStockOnlyCheck" />
+                            <span>শুধু স্টকে আছে</span>
+                        </label>
+                    </div>
                 </div>
-            </div>
-        </section>
+                <div class="filter-panel-footer">
+                    <button id="resetFiltersBtn" class="btn-ghost btn-block">রিসেট করুন</button>
+                </div>
+            </aside>
 
-        <div class="section-heading">
-            <h2>আমাদের প্রিমিয়াম প্রোডাক্টস</h2>
-            <p>সেরা মানের গ্যাজেট, সেরা দামে</p>
+            <section class="products-area">
+                <div class="toolbar-row">
+                    <span class="result-count" id="resultCount"></span>
+                    <button id="openFiltersBtn" class="filter-trigger-btn">
+                        <span class="material-symbols-outlined">category</span>ক্যাটাগরি
+                    </button>
+                </div>
+                <div class="product-grid" id="productContainer"></div>
+                
+            </section>
         </div>
-
-        <div class="search-wrapper">
-            <div class="search-box">
-                <span class="material-symbols-outlined search-icon">search</span>
-                <input type="text" id="productSearch" placeholder="পছন্দের গ্যাজেট খুঁজুন..." autocomplete="off" aria-label="প্রোডাক্ট খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" />
-                <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="খোঁজ মুছুন" hidden>
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-                <div id="searchResults" class="search-results" role="listbox"></div>
-            </div>
-        </div>
-
-        <div class="category-section">
-            <div class="category-slider-wrap">
-                <button class="cat-arrow cat-arrow-left" id="catScrollLeft" aria-label="বামে স্ক্রল">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <div class="category-pills" id="categoryContainer">
-                    <button class="pill active" data-category="all">সব</button>
-                </div>
-                <button class="cat-arrow cat-arrow-right" id="catScrollRight" aria-label="ডানে স্ক্রল">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
-            </div>
-            <div class="toolbar-row">
-                <span class="result-count" id="resultCount"></span>
-                <div class="sort-wrap">
-                    <label for="sortSelect" class="sort-label">সাজান</label>
-                    <select id="sortSelect" class="select-input sort-select">
-                        <option value="default">জনপ্রিয়তা</option>
-                        <option value="price-asc">দাম: কম থেকে বেশি</option>
-                        <option value="price-desc">দাম: বেশি থেকে কম</option>
-                        <option value="discount">সর্বোচ্চ ছাড়</option>
-                        <option value="name-asc">নাম: A-Z</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <div class="product-grid" id="productContainer"></div>
-
-        <section class="recently-viewed" id="recentlyViewedSection" hidden>
-            <div class="section-heading small-heading">
-                <h2>সম্প্রতি দেখেছেন</h2>
-            </div>
-            <div class="product-grid recent-grid" id="recentlyViewedContainer"></div>
-        </section>
     </main>
 
+    <!-- Product Detail Panel -->
     <div class="product-detail-overlay" id="productDetailOverlay"></div>
     <aside class="product-detail-panel" id="productDetailPanel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
         <div class="product-detail-header">
@@ -164,6 +178,7 @@
         <div class="product-detail-body">
             <img id="detailImage" src="" alt="" />
             <h2 id="detailTitle"></h2>
+            <div class="modal-rating-row" id="detailRating"></div>
             <div class="modal-price-row">
                 <p id="detailPrice" class="modal-price"></p>
                 <span id="detailDiscount" class="modal-discount-badge"></span>
@@ -179,9 +194,32 @@
                     <span class="material-symbols-outlined">favorite</span>
                 </button>
             </div>
+
+            <div class="review-section">
+                <div class="review-section-header">
+                    <h3>গ্রাহক রিভিউ</h3>
+                    <span class="review-summary" id="reviewSummary"></span>
+                </div>
+                <div id="detailReviews" class="review-list"></div>
+
+                <form id="reviewForm" class="review-form">
+                    <h4>আপনার অভিজ্ঞতা লিখুন</h4>
+                    <div class="review-star-picker" id="reviewStarPicker" role="radiogroup" aria-label="রেটিং দিন">
+                        <button type="button" class="star-pick" data-value="1" aria-label="১ স্টার"><span class="material-symbols-outlined">star</span></button>
+                        <button type="button" class="star-pick" data-value="2" aria-label="২ স্টার"><span class="material-symbols-outlined">star</span></button>
+                        <button type="button" class="star-pick" data-value="3" aria-label="৩ স্টার"><span class="material-symbols-outlined">star</span></button>
+                        <button type="button" class="star-pick" data-value="4" aria-label="৪ স্টার"><span class="material-symbols-outlined">star</span></button>
+                        <button type="button" class="star-pick" data-value="5" aria-label="৫ স্টার"><span class="material-symbols-outlined">star</span></button>
+                    </div>
+                    <input type="text" id="reviewNameInput" placeholder="আপনার নাম" maxlength="40" autocomplete="name" />
+                    <textarea id="reviewCommentInput" rows="3" placeholder="প্রোডাক্টটি কেমন লাগলো লিখুন..." maxlength="400"></textarea>
+                    <button type="submit" class="btn-primary btn-block" id="submitReviewBtn">রিভিউ জমা দিন</button>
+                </form>
+            </div>
         </div>
     </aside>
 
+    <!-- Cart Sidebar -->
     <div class="cart-overlay" id="cartOverlay"></div>
     <aside class="cart-sidebar" id="cartSidebar" role="dialog" aria-modal="true" aria-label="কার্ট">
         <div class="cart-header">
@@ -274,6 +312,7 @@
         </div>
     </aside>
 
+    <!-- Modals -->
     <div id="orderSuccessModal" class="modal" role="dialog" aria-modal="true">
         <div class="modal-content success-content">
             <span class="material-symbols-outlined success-icon">check_circle</span>
@@ -304,12 +343,20 @@
         </div>
     </div>
 
+    <!-- ✅ আপডেট করা অর্ডার হিস্ট্রি মডাল -->
     <div id="orderHistoryModal" class="modal" role="dialog" aria-modal="true" aria-label="অর্ডার হিস্ট্রি">
         <div class="modal-content history-content">
             <button id="closeOrderHistoryModal" class="close-btn" aria-label="বন্ধ করুন">
                 <span class="material-symbols-outlined">close</span>
             </button>
             <h2><span class="material-symbols-outlined">history</span> অর্ডার হিস্ট্রি</h2>
+            
+            <!-- ফোন ইনপুট ও ফেচ বাটন -->
+            <div class="history-fetch-area" style="display:flex; gap:8px; margin-bottom:16px; align-items:center;">
+                <input type="tel" id="historyPhoneInput" placeholder="আপনার মোবাইল নম্বর দিন" maxlength="11" style="flex:1; padding:10px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--text); font-size:14px;">
+                <button id="fetchOrderBtn" class="btn-primary" style="width:auto; padding:10px 20px;">খুঁজুন</button>
+            </div>
+
             <div id="orderHistoryContainer" class="history-list"></div>
         </div>
     </div>

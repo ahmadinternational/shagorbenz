@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAGORBENZ — অ্যাডমিন প্যানেল</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Admin Panel Styles (Base) */
+        .admin-wrapper { max-width: 860px; margin: 30px auto; padding: 0 20px; }
+        .admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-4); box-shadow: var(--shadow-sm); position: relative; }
+        .admin-card h2 { display: flex; align-items: center; gap: 8px; font-size: 20px; margin-bottom: var(--sp-3); border-bottom: 1px solid var(--border); padding-bottom: var(--sp-2); }
+        .admin-card h2 .material-symbols-outlined { color: var(--accent); }
+
+        #logoutBtn { position: absolute; top: 16px; right: 20px; background: var(--danger-soft); border: 1px solid rgba(225, 29, 72, 0.2); color: var(--danger); padding: 6px 14px; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; transition: 0.2s; }
+        #logoutBtn:hover { background: var(--danger); color: #fff; }
+
+        #loginOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+        #loginOverlay.hidden { display: none; }
+        .login-box { background: var(--surface); padding: var(--sp-4); border-radius: var(--r-lg); width: 100%; max-width: 420px; border: 1px solid var(--border); }
+        .login-box h2 { text-align: center; margin-bottom: var(--sp-3); }
+        .login-box .form-group { margin-bottom: var(--sp-2); }
+        .login-box input { width: 100%; padding: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 15px; }
+        .login-box input:focus { border-color: var(--accent); outline: none; }
+
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: var(--sp-3); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .admin-tab { background: transparent; border: none; padding: 10px 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: var(--r-sm); transition: 0.2s; font-family: inherit; font-size: 14px; }
+        .admin-tab:hover { background: var(--surface-2); color: var(--text); }
+        .admin-tab.active { background: var(--accent-soft); color: var(--accent); }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+
+        .admin-form .form-group { margin-bottom: var(--sp-2); }
+        .admin-form label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+        .admin-form input, .admin-form select, .admin-form textarea { width: 100%; padding: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: 0.2s; }
+        .admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus { border-color: var(--accent); }
+        .admin-form textarea { min-height: 60px; resize: vertical; }
+
+        .preview-img-container { margin-top: 8px; }
+        .preview-img { max-width: 120px; max-height: 120px; object-fit: contain; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); display: none; }
+
+        .price-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .price-input-wrapper span { font-size: 16px; font-weight: 700; color: var(--accent); }
+        .price-input-wrapper input { flex: 1; }
+
+        /* Product List */
+        .admin-product-list { margin-top: var(--sp-2); }
+        .admin-product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); transition: 0.2s; }
+        .admin-product-item:hover { background: var(--surface-2); }
+        .admin-product-item:last-child { border-bottom: none; }
+        
+        .admin-p-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .admin-p-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid var(--border); }
+        .admin-p-details { display: flex; flex-direction: column; }
+        .admin-p-name { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 2px; }
+        .admin-p-price { font-size: 13px; font-weight: 700; color: var(--accent); }
+        .admin-p-priority { font-size: 11px; color: var(--text-faint); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); display: inline-block; margin-top: 2px; }
+
+        .admin-p-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .admin-p-actions button { background: var(--accent-soft); border: none; color: var(--accent); padding: 6px 14px; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; }
+        .admin-p-actions button:hover { background: var(--accent); color: var(--accent-ink); }
+        .admin-p-actions .del-btn { background: var(--danger-soft); color: var(--danger); }
+        .admin-p-actions .del-btn:hover { background: var(--danger); color: #fff; }
+
+        #editFormArea { display: none; margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 2px solid var(--border); }
+        #editFormArea.visible { display: block; }
+        #cancelEditBtn { margin-top: 10px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 18px; border-radius: var(--r-sm); cursor: pointer; font-weight: 600; width: 100%; transition: 0.2s; }
+        #cancelEditBtn:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* Review Table */
+        .review-table-wrap { overflow-x: auto; }
+        .review-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: var(--sp-2); }
+        .review-table th { text-align: left; padding: 10px 8px; border-bottom: 2px solid var(--border); color: var(--text-faint); font-weight: 700; font-size: 12px; text-transform: uppercase; }
+        .review-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .review-table .del-btn { background: var(--danger-soft); border: none; color: var(--danger); padding: 6px 10px; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.2s; }
+        .review-table .del-btn:hover { background: var(--danger); color: #fff; }
+        .review-table .rating-stars { display: flex; gap: 2px; color: var(--star); }
+        .review-table .rating-stars .empty { color: var(--border-strong); font-variation-settings: 'FILL' 0; }
+
+        /* Order Management */
+        .admin-order-list { margin-top: var(--sp-2); display: flex; flex-direction: column; gap: 12px; }
+        .admin-order-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-2); transition: 0.2s; }
+        .admin-order-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .admin-order-id { font-weight: 700; font-size: 14px; color: var(--accent); }
+        .admin-order-status select { padding: 6px 10px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 600; font-size: 13px; cursor: pointer; font-family: inherit; outline: none; }
+        .admin-order-status select:focus { border-color: var(--accent); }
+        .admin-order-details { font-size: 13px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+        .admin-order-details strong { color: var(--text); }
+        .admin-order-items { font-size: 13px; color: var(--text); margin: 6px 0; font-weight: 500; }
+        .admin-order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .admin-order-total { font-weight: 800; font-size: 16px; color: var(--text); }
+
+        /* Sales Analytics */
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .analytics-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; text-align: center; }
+        .analytics-card .label { font-size: 12px; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+        .analytics-card .value { font-size: 24px; font-weight: 800; color: var(--text); margin-top: 6px; }
+        .analytics-card .sub { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+        #dashboardArea { display: none; }
+        #dashboardArea.visible { display: block; }
+        .admin-success-msg { background: var(--success-soft); color: var(--success); padding: 12px; border-radius: var(--r-sm); margin-bottom: var(--sp-2); border: 1px solid rgba(22, 163, 74, 0.2); display: none; }
+        .loader-small { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ==========================================================
+           ✅ MOBILE RESPONSIVE OVERRIDES
+           ========================================================== */
+        @media (max-width: 768px) {
+            .admin-wrapper { padding: 0 10px; margin: 15px auto; }
+            .login-box { padding: 20px; }
+            
+            .admin-tabs { flex-wrap: nowrap; overflow-x: auto; gap: 6px; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
+            .admin-tab { font-size: 12px; padding: 8px 12px; white-space: nowrap; }
+            
+            .admin-product-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .admin-p-left { width: 100%; }
+            .admin-p-actions { width: 100%; justify-content: flex-start; gap: 12px; }
+            
+            .admin-order-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .admin-order-details { font-size: 12px; }
+            .admin-order-card { padding: 12px; }
+            .admin-order-items { font-size: 12px; }
+            .admin-order-total { font-size: 14px; }
+            
+            .analytics-card .value { font-size: 20px; }
+            
+            #logoutBtn { position: static; width: 100%; margin-top: 10px; display: block; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .admin-p-thumb { width: 40px; height: 40px; }
+            .admin-p-name { font-size: 13px; }
+            .admin-p-actions button { font-size: 12px; padding: 4px 10px; }
+            .admin-card h2 { font-size: 16px; }
+            .admin-card { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>🔐 অ্যাডমিন লগইন</h2>
+            <div class="form-group">
+                <label for="loginUser">ইউজারনেম</label>
+                <input type="text" id="loginUser" placeholder="admin" value="admin">
+            </div>
+            <div class="form-group">
+                <label for="loginPass">পাসওয়ার্ড</label>
+                <input type="password" id="loginPass" placeholder="******" value="admin123">
+            </div>
+            <button id="loginBtn" class="btn-primary">লগইন করুন</button>
+            <p style="margin-top:12px;font-size:13px;color:var(--text-faint);text-align:center;">ডিফল্ট: admin / admin123</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="admin-wrapper" id="dashboardArea">
+        <div class="admin-card">
+            <button id="logoutBtn">🚪 লগআউট</button>
+            <h2><span class="material-symbols-outlined">dashboard</span> SHAGORBENZ অ্যাডমিন প্যানেল</h2>
+            <div class="admin-tabs">
+                <!-- ✅ 1st: Sales Analytics -->
+                <button class="admin-tab active" data-tab="tab-analytics">📊 সেলস অ্যানালিটিক্স</button>
+                <!-- ✅ 2nd: Orders -->
+                <button class="admin-tab" data-tab="tab-orders">📦 অর্ডার ম্যানেজ</button>
+                <!-- ✅ 3rd: Reviews -->
+                <button class="admin-tab" data-tab="tab-reviews">🗑️ রিভিউ ম্যানেজ</button>
+                <!-- ✅ 4th: Edit -->
+                <button class="admin-tab" data-tab="tab-edit">✏️ প্রোডাক্ট এডিট</button>
+                <!-- ✅ 5th: Upload -->
+                <button class="admin-tab" data-tab="tab-upload">➕ প্রোডাক্ট আপলোড</button>
+            </div>
+
+            <!-- ✅ 1st Panel: Analytics -->
+            <div id="tab-analytics" class="admin-panel active">
+                <div id="analyticsLoader" class="empty-state" style="padding:20px 0;">
+                    <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
+                    <p style="margin-top:10px;color:var(--text-faint);">অ্যানালিটিক্স লোড হচ্ছে...</p>
+                </div>
+                <div id="analyticsContent"></div>
+            </div>
+
+            <!-- ✅ 2nd Panel: Orders -->
+            <div id="tab-orders" class="admin-panel">
+                <div id="ordersLoader" class="empty-state" style="padding:20px 0;">
+                    <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
+                    <p style="margin-top:10px;color:var(--text-faint);">অর্ডার লোড হচ্ছে...</p>
+                </div>
+                <div class="admin-order-list" id="adminOrderList"></div>
+            </div>
+
+            <!-- ✅ 3rd Panel: Reviews -->
+            <div id="tab-reviews" class="admin-panel">
+                <div id="reviewLoader" class="empty-state" style="padding:20px 0;">
+                    <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
+                    <p style="margin-top:10px;color:var(--text-faint);">রিভিউ লোড হচ্ছে...</p>
+                </div>
+                <div class="review-table-wrap" id="reviewTableWrap" style="display:none;">
+                    <table class="review-table">
+                        <thead><tr><th>ক্রেতা</th><th>রেটিং</th><th>মন্তব্য</th><th>প্রোডাক্ট আইডি</th><th>অ্যাকশন</th></tr></thead>
+                        <tbody id="reviewTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="noReviewsMsg" class="empty-state" style="display:none;padding:20px 0;">
+                    <span class="material-symbols-outlined" style="font-size:40px;color:var(--text-faint);">reviews</span>
+                    <h3 style="color:var(--text-muted);font-size:16px;">এখনো কোনো রিভিউ নেই</h3>
+                </div>
+            </div>
+
+            <!-- ✅ 4th Panel: Edit -->
+            <div id="tab-edit" class="admin-panel">
+                <div id="editSuccess" class="admin-success-msg">✅ প্রোডাক্ট সফলভাবে আপডেট হয়েছে!</div>
+                <div class="admin-product-list" id="adminProductList">
+                    <div class="empty-state" style="padding:20px 0; color:var(--text-faint);">
+                        <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
+                        <p style="margin-top:10px;">প্রোডাক্ট লোড হচ্ছে...</p>
+                    </div>
+                </div>
+                <div id="editFormArea">
+                    <form id="adminEditForm" class="admin-form">
+                        <div class="form-group">
+                            <label for="eTitle">প্রোডাক্টের নাম *</label>
+                            <input type="text" id="eTitle" required placeholder="প্রোডাক্টের নাম" oninput="autoDetectCategory('eCategory')">
+                        </div>
+                        <div class="form-group">
+                            <label for="eCategory">ক্যাটাগরি *</label>
+                            <input type="text" id="eCategory" placeholder="যেমন: Phone, Smart TV, Furniture" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ePriority">সিরিজ অর্ডার / Priority (যেমন: 1, 2, 3)</label>
+                            <input type="number" id="ePriority" value="0" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="ePrice">বর্তমান মূল্য (টাকা) *</label>
+                            <div class="price-input-wrapper"><span>৳</span><input type="number" id="ePrice" required placeholder="450"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="eOldPrice">পূর্বের মূল্য (ঐচ্ছিক)</label>
+                            <input type="number" id="eOldPrice" placeholder="550">
+                        </div>
+                        <div class="form-group">
+                            <label for="eImage">ছবির লিঙ্ক (Image URL) *</label>
+                            <input type="url" id="eImage" required placeholder="https://example.com/image.jpg" oninput="updateImagePreview('eImage', 'eImagePreview')">
+                            <div class="preview-img-container"><img id="eImagePreview" class="preview-img" alt="Image Preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="eStock">স্টক পরিমাণ *</label>
+                            <input type="number" id="eStock" value="20" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eDesc">প্রোডাক্ট বিবরণ (ঐচ্ছিক)</label>
+                            <textarea id="eDesc" rows="3" placeholder="প্রোডাক্টের বিস্তারিত বিবরণ..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" id="updateBtn">প্রোডাক্ট আপডেট করুন</button>
+                        <button type="button" id="cancelEditBtn">বাতিল করুন</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ✅ 5th Panel: Upload -->
+            <div id="tab-upload" class="admin-panel">
+                <div id="uploadSuccess" class="admin-success-msg">✅ প্রোডাক্ট সফলভাবে আপলোড হয়েছে!</div>
+                <form id="adminProductForm" class="admin-form">
+                    <div class="form-group">
+                        <label for="pTitle">প্রোডাক্টের নাম *</label>
+                        <input type="text" id="pTitle" required placeholder="যেমন: iPhone 15 Pro Max" oninput="autoDetectCategory('pCategory')">
+                    </div>
+                    <div class="form-group">
+                        <label for="pCategory">ক্যাটাগরি (অটো-ডিটেক্ট বা ম্যানুয়ালি)</label>
+                        <input type="text" id="pCategory" placeholder="যেমন: Phone, Smart TV, Furniture" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pPrice">বর্তমান মূল্য (টাকা) *</label>
+                        <div class="price-input-wrapper"><span>৳</span><input type="number" id="pPrice" required placeholder="450"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="pOldPrice">পূর্বের মূল্য (ঐচ্ছিক)</label>
+                        <input type="number" id="pOldPrice" placeholder="550">
+                    </div>
+                    <div class="form-group">
+                        <label for="pImage">ছবির লিঙ্ক (Image URL) *</label>
+                        <input type="url" id="pImage" required placeholder="https://example.com/image.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label for="pStock">স্টক পরিমাণ *</label>
+                        <input type="number" id="pStock" value="20" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pDesc">প্রোডাক্ট বিবরণ (ঐচ্ছিক)</label>
+                        <textarea id="pDesc" rows="3" placeholder="প্রোডাক্টের বিস্তারিত বিবরণ..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" id="uploadBtn">প্রোডাক্ট ডাটাবেজে যুক্ত করুন</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        const SUPABASE_URL = 'https://jivoyxizkmqcbetlszzi.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imppdm95eGl6a21xY2JldGxzenppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTUzMTYsImV4cCI6MjEwMDQzMTMxNn0.eDS6N1AE_vZABU3BPtjWBcYXUMwHwko3F_9v2V93IVo';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase Client Initialized!');
+
+        function getEl(id) { return document.getElementById(id); }
+        function showToast(msg, isSuccess = true) {
+            const cont = document.getElementById('toastContainer');
+            if (!cont) return alert(msg);
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.innerHTML = `<span class="material-symbols-outlined">${isSuccess ? 'check_circle' : 'error'}</span><span>${msg}</span>`;
+            cont.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+        }
+
+        // ===== LOGIN =====
+        const loginOverlay = getEl('loginOverlay');
+        const dashboardArea = getEl('dashboardArea');
+
+        async function performLogin() {
+            const username = getEl('loginUser').value.trim();
+            const password = getEl('loginPass').value.trim();
+            if (!username || !password) { showToast('ইউজারনেম ও পাসওয়ার্ড দিন', false); return; }
+            try {
+                const { data, error } = await supabase.from('admins').select('id').eq('username', username).eq('password', password).maybeSingle();
+                if (error) { showToast('ডাটাবেজ ত্রুটি: ' + error.message, false); return; }
+                if (data) {
+                    sessionStorage.setItem('adminAuthenticated', 'true');
+                    loginOverlay.classList.add('hidden');
+                    dashboardArea.classList.add('visible');
+                    showToast('স্বাগতম অ্যাডমিন!');
+                    loadReviews(); loadProductList(); loadOrders(); loadAnalytics();
+                } else {
+                    showToast('ভুল ইউজারনেম বা পাসওয়ার্ড', false);
+                }
+            } catch (err) {
+                showToast('নেটওয়ার্ক ত্রুটি!', false);
+            }
+        }
+
+        function performLogout() {
+            if (confirm('আপনি কি নিশ্চিত লগআউট করতে চান?')) {
+                sessionStorage.removeItem('adminAuthenticated');
+                dashboardArea.classList.remove('visible');
+                loginOverlay.classList.remove('hidden');
+                getEl('loginUser').value = 'admin';
+                getEl('loginPass').value = 'admin123';
+                showToast('লগআউট সফল!');
+            }
+        }
+
+        if (sessionStorage.getItem('adminAuthenticated') === 'true') {
+            loginOverlay.classList.add('hidden');
+            dashboardArea.classList.add('visible');
+            setTimeout(() => { loadReviews(); loadProductList(); loadOrders(); loadAnalytics(); }, 100);
+        }
+
+        getEl('loginBtn').addEventListener('click', performLogin);
+        getEl('logoutBtn').addEventListener('click', performLogout);
+        ['loginUser', 'loginPass'].forEach(id => {
+            getEl(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') performLogin(); });
+        });
+
+        // ===== CATEGORY AUTO DETECT =====
+        window.autoDetectCategory = function(catId) {
+            const titleId = catId === 'pCategory' ? 'pTitle' : 'eTitle';
+            const titleEl = document.getElementById(titleId);
+            const catInput = document.getElementById(catId);
+            if (!titleEl || !catInput) return;
+            const title = titleEl.value.toLowerCase();
+            let detected = '';
+            if (title.includes('phone') || title.includes('mobile') || title.includes('iphone') || title.includes('samsung')) detected = 'Phone';
+            else if (title.includes('watch') || title.includes('smartwatch') || title.includes('garmin') || title.includes('apple watch')) detected = 'Smartwatch';
+            else if (title.includes('earbud') || title.includes('headphone') || title.includes('airpod') || title.includes('earphone')) detected = 'Earbuds';
+            else if (title.includes('power') || title.includes('bank') || title.includes('charger')) detected = 'Power Bank';
+            else if (title.includes('spice') || title.includes('masala') || title.includes('jira') || title.includes('cumin') || title.includes('মশলা')) detected = 'Spices';
+            else if (title.includes('rice') || title.includes('dal') || title.includes('oil') || title.includes('grocery') || title.includes('মুদি')) detected = 'Groceries';
+            if (detected) catInput.value = detected;
+        };
+
+        // ===== IMAGE PREVIEW =====
+        window.updateImagePreview = function(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            if (input && preview) {
+                if (input.value.trim()) {
+                    preview.src = input.value.trim();
+                    preview.style.display = 'block';
+                    preview.onerror = function() { preview.style.display = 'none'; };
+                } else { preview.style.display = 'none'; }
+            }
+        };
+
+        // ===== UPLOAD =====
+        const uploadForm = getEl('adminProductForm');
+        const uploadBtn = getEl('uploadBtn');
+        const uploadSuccess = getEl('uploadSuccess');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            uploadBtn.disabled = true; uploadBtn.innerHTML = '<span class="loader-small"></span> আপলোড হচ্ছে...';
+            uploadSuccess.style.display = 'none';
+            const category = getEl('pCategory').value.trim();
+            if (!category) { showToast('ক্যাটাগরি লিখুন', false); uploadBtn.disabled = false; uploadBtn.innerHTML = 'প্রোডাক্ট ডাটাবেজে যুক্ত করুন'; return; }
+            const product = {
+                title: getEl('pTitle').value.trim(), category: category,
+                price: parseFloat(getEl('pPrice').value) || 0, old_price: parseFloat(getEl('pOldPrice').value) || 0,
+                image: getEl('pImage').value.trim(), stock: parseInt(getEl('pStock').value) || 0,
+                description: getEl('pDesc').value.trim(),
+                priority: 0
+            };
+            const { error } = await supabase.from('products').insert(product);
+            if (error) { showToast('ত্রুটি: ' + error.message, false); } 
+            else { uploadSuccess.style.display = 'block'; uploadForm.reset(); showToast('প্রোডাক্ট সফলভাবে যুক্ত হয়েছে!'); loadProductList(); }
+            uploadBtn.disabled = false; uploadBtn.innerHTML = 'প্রোডাক্ট ডাটাবেজে যুক্ত করুন';
+        });
+
+        // ===== EDIT & DELETE =====
+        async function loadProductList() {
+            const listCont = getEl('adminProductList');
+            listCont.innerHTML = `<div class="empty-state" style="padding:20px 0; color:var(--text-faint);">
+                <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
+                <p style="margin-top:10px;">প্রোডাক্ট লোড হচ্ছে...</p>
+            </div>`;
+
+            const { data, error } = await supabase.from('products').select('*').order('priority', { ascending: true }).order('id', { ascending: false });
+            if (error) { listCont.innerHTML = `<p style="color:var(--danger);">লোড ত্রুটি: ${error.message}</p>`; return; }
+            if (!data || data.length === 0) {
+                listCont.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">inventory_2</span><h3>কোনো প্রোডাক্ট নেই</h3></div>`;
+                return;
+            }
+
+            const FALLBACK_IMAGE = 'https://via.placeholder.com/250';
+            listCont.innerHTML = data.map(p => `
+                <div class="admin-product-item">
+                    <div class="admin-p-left">
+                        <img src="${escapeHtml(p.image || FALLBACK_IMAGE)}" alt="" class="admin-p-thumb" onerror="this.src='${FALLBACK_IMAGE}'">
+                        <div class="admin-p-details">
+                            <div class="admin-p-name">${escapeHtml(p.title)}</div>
+                            <div class="admin-p-price">${formatPrice(p.price)}</div>
+                            <div class="admin-p-priority">Priority: ${p.priority || 0}</div>
+                        </div>
+                    </div>
+                    <div class="admin-p-actions">
+                        <button data-id="${p.id}" data-action="edit-product">✏️ Edit</button>
+                        <button data-id="${p.id}" data-action="delete-product" class="del-btn">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        getEl('adminProductList').addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (!id) return;
+
+            if (btn.dataset.action === 'edit-product') {
+                const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+                if (error || !data) { showToast('প্রোডাক্ট লোড ত্রুটি', false); return; }
+                getEl('eTitle').value = data.title;
+                getEl('eCategory').value = data.category || '';
+                getEl('ePriority').value = data.priority || 0;
+                getEl('ePrice').value = data.price;
+                getEl('eOldPrice').value = data.old_price || '';
+                getEl('eImage').value = data.image;
+                getEl('eStock').value = data.stock;
+                getEl('eDesc').value = data.description || '';
+                if (data.image) {
+                    const preview = getEl('eImagePreview');
+                    preview.src = data.image;
+                    preview.style.display = 'block';
+                    preview.onerror = function() { preview.style.display = 'none'; };
+                } else { getEl('eImagePreview').style.display = 'none'; }
+                const formArea = getEl('editFormArea');
+                formArea.classList.add('visible');
+                formArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                formArea.dataset.editingId = id;
+                return;
+            }
+
+            if (btn.dataset.action === 'delete-product') {
+                if (!confirm('আপনি কি নিশ্চিত এই প্রোডাক্টটি ডিলিট করতে চান?')) return;
+                const { error } = await supabase.from('products').delete().eq('id', id);
+                if (error) { showToast('ডিলিট ত্রুটি: ' + error.message, false); } 
+                else { showToast('প্রোডাক্ট সফলভাবে ডিলিট করা হয়েছে'); loadProductList(); }
+            }
+        });
+
+        getEl('cancelEditBtn').addEventListener('click', () => {
+            const formArea = getEl('editFormArea');
+            formArea.classList.remove('visible');
+            formArea.dataset.editingId = '';
+            getEl('adminEditForm').reset();
+            getEl('eImagePreview').style.display = 'none';
+        });
+
+        const editForm = getEl('adminEditForm');
+        const updateBtn = getEl('updateBtn');
+        const editSuccess = getEl('editSuccess');
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formArea = getEl('editFormArea');
+            const id = formArea.dataset.editingId;
+            if (!id) { showToast('প্রথমে একটি প্রোডাক্ট সিলেক্ট করুন', false); return; }
+            updateBtn.disabled = true; updateBtn.innerHTML = '<span class="loader-small"></span> আপডেট হচ্ছে...';
+            editSuccess.style.display = 'none';
+            const category = getEl('eCategory').value.trim();
+            if (!category) { showToast('ক্যাটাগরি লিখুন', false); updateBtn.disabled = false; updateBtn.innerHTML = 'প্রোডাক্ট আপডেট করুন'; return; }
+            const updates = {
+                title: getEl('eTitle').value.trim(), category: category,
+                priority: parseInt(getEl('ePriority').value) || 0,
+                price: parseFloat(getEl('ePrice').value) || 0, old_price: parseFloat(getEl('eOldPrice').value) || 0,
+                image: getEl('eImage').value.trim(), stock: parseInt(getEl('eStock').value) || 0,
+                description: getEl('eDesc').value.trim()
+            };
+            const { error } = await supabase.from('products').update(updates).eq('id', id);
+            if (error) { showToast('আপডেট ত্রুটি: ' + error.message, false); } 
+            else { editSuccess.style.display = 'block'; showToast('প্রোডাক্ট সফলভাবে আপডেট হয়েছে!'); formArea.classList.remove('visible'); formArea.dataset.editingId = ''; editForm.reset(); getEl('eImagePreview').style.display = 'none'; loadProductList(); }
+            updateBtn.disabled = false; updateBtn.innerHTML = 'প্রোডাক্ট আপডেট করুন';
+        });
+
+        // ===== ORDERS, REVIEWS, ANALYTICS =====
+        async function loadOrders() {
+            const ordersLoader = getEl('ordersLoader');
+            const orderList = getEl('adminOrderList');
+            ordersLoader.style.display = 'block';
+            orderList.innerHTML = '';
+            const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+            if (error) { showToast('অর্ডার লোড ত্রুটি: ' + error.message, false); ordersLoader.style.display = 'none'; orderList.innerHTML = `<p style="color:var(--danger); text-align:center;">অর্ডার লোড করতে সমস্যা হয়েছে</p>`; return; }
+            ordersLoader.style.display = 'none';
+            if (!data || data.length === 0) { orderList.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><h3>কোনো অর্ডার পাওয়া যায়নি</h3></div>`; return; }
+            const statusOptions = ['Pending', 'Processing', 'Delivered', 'Cancelled'];
+            const statusLabels = {'Pending':'পেন্ডিং','Processing':'প্রসেসিং','Delivered':'ডেলিভার্ড','Cancelled':'বাতিল'};
+            orderList.innerHTML = data.map(o => {
+                let itemsText = '';
+                try { const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items; itemsText = items.map(i => `${i.title} (${i.quantity}টি)`).join(', '); } catch { itemsText = 'প্রোডাক্ট দেখা যাচ্ছে না'; }
+                const dateStr = o.created_at ? new Date(o.created_at).toLocaleString('bn-BD', { hour12: true }) : '';
+                return `<div class="admin-order-card" data-order-id="${o.id}"><div class="admin-order-header"><span class="admin-order-id">${escapeHtml(o.order_id)}</span><div class="admin-order-status"><select data-order-id="${o.id}">${statusOptions.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${statusLabels[s]}</option>`).join('')}</select></div></div><div class="admin-order-details"><div><strong>নাম:</strong> ${escapeHtml(o.customer_name || '')}</div><div><strong>ফোন:</strong> ${escapeHtml(o.phone || '')}</div><div><strong>ঠিকানা:</strong> ${escapeHtml(o.address || '')}</div><div><strong>তারিখ:</strong> ${escapeHtml(dateStr)}</div></div><div class="admin-order-items">📦 ${escapeHtml(itemsText)}</div><div class="admin-order-footer"><div class="admin-order-total">${formatPrice(o.total_price)}</div></div></div>`;
+            }).join('');
+        }
+        getEl('adminOrderList').addEventListener('change', async (e) => {
+            const select = e.target.closest('select');
+            if (!select) return;
+            const orderId = select.dataset.orderId;
+            const newStatus = select.value;
+            if (!orderId) return;
+            const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+            if (error) { showToast('স্ট্যাটাস পরিবর্তন ত্রুটি', false); } else { showToast('স্ট্যাটাস সফলভাবে আপডেট হয়েছে!'); }
+        });
+
+        async function loadReviews() {
+            const reviewLoader = getEl('reviewLoader');
+            const reviewTableWrap = getEl('reviewTableWrap');
+            const reviewTableBody = getEl('reviewTableBody');
+            const noReviewsMsg = getEl('noReviewsMsg');
+            reviewLoader.style.display = 'block';
+            reviewTableWrap.style.display = 'none'; noReviewsMsg.style.display = 'none';
+            const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+            if (error) { showToast('রিভিউ লোড করতে সমস্যা', false); reviewLoader.style.display = 'none'; return; }
+            reviewLoader.style.display = 'none';
+            if (!data || data.length === 0) { noReviewsMsg.style.display = 'block'; return; }
+            reviewTableWrap.style.display = 'block';
+            reviewTableBody.innerHTML = data.map(r => {
+                const stars = Array.from({ length: 5 }, (_, i) => `<span class="material-symbols-outlined${i < r.rating ? '' : ' empty'}">star</span>`).join('');
+                return `<tr><td><strong>${escapeHtml(r.customer_name || 'অজানা')}</strong></td><td><div class="rating-stars">${stars}</div></td><td>${escapeHtml(r.comment || '-')}</td><td>${escapeHtml(r.product_id)}</td><td><button class="del-btn" data-id="${r.id}" data-action="delete-review">ডিলিট</button></td></tr>`;
+            }).join('');
+        }
+        document.getElementById('tab-reviews').addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-action="delete-review"]');
+            if (!btn) return;
+            if (!confirm('আপনি কি নিশ্চিত এই রিভিউটি ডিলিট করতে?')) return;
+            const { error } = await supabase.from('reviews').delete().eq('id', btn.dataset.id);
+            if (error) { showToast('ডিলিট করতে সমস্যা', false); } else { showToast('রিভিউ সফলভাবে ডিলিট করা হয়েছে'); loadReviews(); }
+        });
+
+        async function loadAnalytics() {
+            const loader = getEl('analyticsLoader');
+            const content = getEl('analyticsContent');
+            loader.style.display = 'block';
+            content.innerHTML = '';
+            try {
+                const { data: orders, error } = await supabase.from('orders').select('total_price, created_at');
+                if (error) throw error;
+                if (!orders || orders.length === 0) {
+                    loader.style.display = 'none';
+                    content.innerHTML = `<div class="empty-state"><span class="material-symbols-outlined">receipt_long</span><h3>কোনো বিক্রি ডেটা নেই</h3></div>`;
+                    return;
+                }
+                const now = new Date();
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay());
+                let totalRevenue = 0, totalOrders = orders.length, yearlyRevenue = 0, monthlyRevenue = 0, weeklyRevenue = 0;
+                orders.forEach(order => {
+                    const price = order.total_price || 0;
+                    totalRevenue += price;
+                    const date = new Date(order.created_at);
+                    if (date >= startOfYear) yearlyRevenue += price;
+                    if (date >= startOfMonth) monthlyRevenue += price;
+                    if (date >= startOfWeek) weeklyRevenue += price;
+                });
+                const avgOrderValue = totalOrders > 0 ? (totalRevenue / totalOrders) : 0;
+                loader.style.display = 'none';
+                content.innerHTML = `
+                    <div class="analytics-grid">
+                        <div class="analytics-card"><div class="label">মোট বিক্রি (সব সময়)</div><div class="value">${formatPrice(totalRevenue)}</div><div class="sub">${totalOrders}টি অর্ডার</div></div>
+                        <div class="analytics-card"><div class="label">বার্ষিক বিক্রি (চলতি বছর)</div><div class="value">${formatPrice(yearlyRevenue)}</div></div>
+                        <div class="analytics-card"><div class="label">মাসিক বিক্রি (চলতি মাস)</div><div class="value">${formatPrice(monthlyRevenue)}</div></div>
+                        <div class="analytics-card"><div class="label">সাপ্তাহিক বিক্রি (চলতি সপ্তাহ)</div><div class="value">${formatPrice(weeklyRevenue)}</div></div>
+                        <div class="analytics-card"><div class="label">গড় অর্ডার মান</div><div class="value">${formatPrice(avgOrderValue)}</div></div>
+                    </div>`;
+            } catch (err) {
+                console.error(err);
+                loader.style.display = 'none';
+                content.innerHTML = `<p style="color:var(--danger); text-align:center;">অ্যানালিটিক্স লোড ত্রুটি: ${err.message}</p>`;
+            }
+        }
+
+        document.querySelectorAll('.admin-tab').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const panelId = this.dataset.tab;
+                getEl(panelId).classList.add('active');
+                if (panelId === 'tab-reviews') loadReviews();
+                if (panelId === 'tab-edit') loadProductList();
+                if (panelId === 'tab-orders') loadOrders();
+                if (panelId === 'tab-analytics') loadAnalytics();
+            });
+        });
+
+        function escapeHtml(str) { return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
+        function formatPrice(price) { return `${Number(price).toLocaleString('bn-BD')} ৳`; }
+        document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>');
+    </script>
+</body>
+</html>

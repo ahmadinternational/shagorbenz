@@ -1,62 +1,14 @@
+import { createClient } from '@supabase/supabase-js';
+
 // ============================================================
-// products.js — SHAGORBENZ Product Data Fetcher (Google Sheets)
+// SUPABASE CLIENT INITIALIZATION
 // ============================================================
-const SHEET_ID = '1qRfg__n-9LV_lUVvfTgQ46-D2yYtEm6T1C45ehU3Lyg';
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const FETCH_TIMEOUT_MS = 10000;
-const FALLBACK_IMAGE = 'https://via.placeholder.com/250';
+const SUPABASE_URL = 'https://jivoyxizkmqcbetlszzi.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imppdm95eGl6a21xY2JldGxzenppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4NTUzMTYsImV4cCI6MjEwMDQzMTMxNn0.eDS6N1AE_vZABU3BPtjWBcYXUMwHwko3F_9v2V93IVo';
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const CACHE_KEY = 'shagorbenzProductCache';
-const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes — fresh cache is reused instantly, stale cache is used only as an offline fallback
-
-const COLUMN = { TITLE: 0, PRICE: 1, IMAGE: 2, CATEGORY: 3, STOCK: 5, DESCRIPTION: 6, OLD_PRICE: 7 };
-
-function parseCSV(text) {
-    const rows = []; let row = [], field = '', inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-        const ch = text[i], next = text[i + 1];
-        if (inQuotes) {
-            if (ch === '"' && next === '"') { field += '"'; i++; }
-            else if (ch === '"') inQuotes = false;
-            else field += ch;
-        } else {
-            if (ch === '"') inQuotes = true;
-            else if (ch === ',') { row.push(field); field = ''; }
-            else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-            else if (ch !== '\r') field += ch;
-        }
-    }
-    if (field.length || row.length) { row.push(field); rows.push(row); }
-    return rows;
-}
-
-const Sanitize = {
-    text(v, fb = '') { return v === undefined || v === null ? fb : String(v).trim() || fb; },
-    number(v, fb = 0) { if (v === undefined || v === null) return fb; const c = String(v).replace(/[^\d.-]/g, ''); const p = Number(c); return isFinite(p) && p >= 0 ? p : fb; },
-    integer(v, fb = 0) { const p = Sanitize.number(v, NaN); return isFinite(p) ? Math.trunc(p) : fb; },
-    category(v) { return Sanitize.text(v, '').toLowerCase(); }
-};
-
-function rowToProduct(row, idx) {
-    const title = Sanitize.text(row[COLUMN.TITLE]); if (!title) return null;
-    return {
-        id: idx.toString(), title,
-        price: Sanitize.number(row[COLUMN.PRICE], 0),
-        image: Sanitize.text(row[COLUMN.IMAGE], FALLBACK_IMAGE),
-        category: Sanitize.category(row[COLUMN.CATEGORY]),
-        stock: row[COLUMN.STOCK] !== undefined && row[COLUMN.STOCK] !== '' ? Sanitize.integer(row[COLUMN.STOCK], 999) : 999,
-        description: Sanitize.text(row[COLUMN.DESCRIPTION], 'বিবরণ নেই।'),
-        oldPrice: Sanitize.number(row[COLUMN.OLD_PRICE], 0)
-    };
-}
-
-async function fetchWithTimeout(url, ms) {
-    const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), ms);
-    try {
-        const res = await fetch(url, { signal: ctrl.signal });
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        return res;
-    } finally { clearTimeout(timer); }
-}
+const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
 
 function readCache() {
     try {
@@ -69,29 +21,45 @@ function readCache() {
 }
 
 function writeCache(products) {
-    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ products, savedAt: Date.now() })); } catch { /* storage full/unavailable — non-fatal */ }
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ products, savedAt: Date.now() })); } catch { /* storage full/unavailable */ }
 }
 
 export async function fetchProducts() {
     const cached = readCache();
     const isFresh = cached && (Date.now() - cached.savedAt) < CACHE_TTL_MS;
     if (isFresh) {
-        // Serve instantly from a fresh cache, then silently refresh in the background.
         refreshInBackground();
         return cached.products;
     }
     try {
-        const res = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
-        const text = await res.text();
-        if (!text || !text.trim()) return cached?.products || [];
-        const rows = parseCSV(text);
-        const dataRows = rows.slice(1);
-        const products = dataRows.map((r, i) => rowToProduct(r, i + 1)).filter(Boolean);
-        writeCache(products);
-        return products;
+        // ✅ এখানে priority অনুযায়ী সাজানো হয়েছে (ছোট সংখ্যা আগে দেখাবে)
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('priority', { ascending: true }) 
+            .order('id', { ascending: false });
+            
+        if (error) throw error;
+        if (!data) return [];
+
+        // ✅ snake_case → camelCase mapping
+        const mapped = data.map(p => ({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            oldPrice: p.old_price,
+            category: p.category,
+            image: p.image,
+            stock: p.stock,
+            description: p.description,
+            priority: p.priority, // ✅ প্রায়োরিটি ম্যাপ করা
+            created_at: p.created_at
+        }));
+
+        writeCache(mapped);
+        return mapped;
     } catch (e) {
-        console.error(e);
-        // Network failed — fall back to whatever we have cached, even if stale, so the store still works offline.
+        console.error('Supabase fetch error:', e);
         if (cached?.products?.length) return cached.products;
         return [];
     }
@@ -99,12 +67,24 @@ export async function fetchProducts() {
 
 async function refreshInBackground() {
     try {
-        const res = await fetchWithTimeout(CSV_URL, FETCH_TIMEOUT_MS);
-        const text = await res.text();
-        if (!text || !text.trim()) return;
-        const rows = parseCSV(text);
-        const dataRows = rows.slice(1);
-        const products = dataRows.map((r, i) => rowToProduct(r, i + 1)).filter(Boolean);
-        writeCache(products);
-    } catch { /* silent — user already has cached data on screen */ }
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('priority', { ascending: true })
+            .order('id', { ascending: false });
+        if (error || !data) return;
+        const mapped = data.map(p => ({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            oldPrice: p.old_price,
+            category: p.category,
+            image: p.image,
+            stock: p.stock,
+            description: p.description,
+            priority: p.priority,
+            created_at: p.created_at
+        }));
+        writeCache(mapped);
+    } catch { /* silent background refresh */ }
 }
