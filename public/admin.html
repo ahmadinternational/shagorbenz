@@ -4,12 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHAGORBENZ — অ্যাডমিন প্যানেল</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
-    <link rel="stylesheet" href="style.css">
+
+    <!-- ✅ সম্পূর্ণ CSS ভেতরেই দেওয়া হলো -->
     <style>
+        /* ============================================================
+           CSS Variables (Root)
+           ========================================================== */
+        :root {
+            --bg: #f7f5f0;
+            --bg-raised: #f0eee6;
+            --surface: #ffffff;
+            --surface-2: #f1efe7;
+            --border: rgba(20, 20, 15, 0.09);
+            --border-strong: rgba(20, 20, 15, 0.16);
+            --text: #17181c;
+            --text-muted: #5c5e68;
+            --text-faint: #8a8c96;
+            --accent: #0bb4cc;
+            --accent-dim: #0a92a5;
+            --accent-soft: rgba(11, 180, 204, 0.1);
+            --accent-ink: #04181b;
+            --danger: #e11d48;
+            --danger-soft: rgba(225, 29, 72, 0.08);
+            --success: #16a34a;
+            --success-soft: rgba(22, 163, 74, 0.08);
+            --star: #e08e00;
+            --sp-1: 8px;
+            --sp-2: 16px;
+            --sp-3: 24px;
+            --sp-4: 32px;
+            --sp-5: 40px;
+            --sp-6: 48px;
+            --sp-8: 64px;
+            --r-sm: 8px;
+            --r-md: 12px;
+            --r-lg: 16px;
+            --shadow-sm: 0 2px 8px rgba(20, 20, 15, 0.06);
+            --shadow-md: 0 12px 32px rgba(20, 20, 15, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', 'Noto Sans Bengali', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
         /* Admin Panel Styles (Base) */
         .admin-wrapper { max-width: 860px; margin: 30px auto; padding: 0 20px; }
         .admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: var(--sp-4); box-shadow: var(--shadow-sm); position: relative; }
@@ -26,6 +69,9 @@
         .login-box .form-group { margin-bottom: var(--sp-2); }
         .login-box input { width: 100%; padding: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 15px; }
         .login-box input:focus { border-color: var(--accent); outline: none; }
+        .login-box .btn-primary { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: var(--r-sm); color: var(--accent-ink); font-weight: 700; font-size: 15px; cursor: pointer; }
+        .login-box .btn-primary:hover { background: #57eaf8; }
+        .login-box p { margin-top: 12px; font-size: 13px; color: var(--text-faint); text-align: center; }
 
         .admin-tabs { display: flex; gap: 10px; margin-bottom: var(--sp-3); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .admin-tab { background: transparent; border: none; padding: 10px 16px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: var(--r-sm); transition: 0.2s; font-family: inherit; font-size: 14px; }
@@ -42,7 +88,6 @@
 
         .preview-img-container { margin-top: 8px; }
         .preview-img { max-width: 120px; max-height: 120px; object-fit: contain; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); display: none; }
-
         .price-input-wrapper { display: flex; align-items: center; gap: 8px; }
         .price-input-wrapper span { font-size: 16px; font-weight: 700; color: var(--accent); }
         .price-input-wrapper input { flex: 1; }
@@ -52,14 +97,12 @@
         .admin-product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); transition: 0.2s; }
         .admin-product-item:hover { background: var(--surface-2); }
         .admin-product-item:last-child { border-bottom: none; }
-        
         .admin-p-left { display: flex; align-items: center; gap: 12px; flex: 1; }
         .admin-p-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid var(--border); }
         .admin-p-details { display: flex; flex-direction: column; }
         .admin-p-name { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 2px; }
         .admin-p-price { font-size: 13px; font-weight: 700; color: var(--accent); }
         .admin-p-priority { font-size: 11px; color: var(--text-faint); background: var(--surface); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); display: inline-block; margin-top: 2px; }
-
         .admin-p-actions { display: flex; gap: 8px; flex-shrink: 0; }
         .admin-p-actions button { background: var(--accent-soft); border: none; color: var(--accent); padding: 6px 14px; border-radius: var(--r-sm); cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; }
         .admin-p-actions button:hover { background: var(--accent); color: var(--accent-ink); }
@@ -108,31 +151,23 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* ==========================================================
-           ✅ MOBILE RESPONSIVE OVERRIDES
-           ========================================================== */
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             .admin-wrapper { padding: 0 10px; margin: 15px auto; }
             .login-box { padding: 20px; }
-            
             .admin-tabs { flex-wrap: nowrap; overflow-x: auto; gap: 6px; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
             .admin-tab { font-size: 12px; padding: 8px 12px; white-space: nowrap; }
-            
             .admin-product-item { flex-direction: column; align-items: flex-start; gap: 10px; }
             .admin-p-left { width: 100%; }
             .admin-p-actions { width: 100%; justify-content: flex-start; gap: 12px; }
-            
             .admin-order-header { flex-direction: column; align-items: flex-start; gap: 6px; }
             .admin-order-details { font-size: 12px; }
             .admin-order-card { padding: 12px; }
             .admin-order-items { font-size: 12px; }
             .admin-order-total { font-size: 14px; }
-            
             .analytics-card .value { font-size: 20px; }
-            
             #logoutBtn { position: static; width: 100%; margin-top: 10px; display: block; text-align: center; }
         }
-
         @media (max-width: 480px) {
             .admin-p-thumb { width: 40px; height: 40px; }
             .admin-p-name { font-size: 13px; }
@@ -156,7 +191,7 @@
                 <input type="password" id="loginPass" placeholder="******" value="admin123">
             </div>
             <button id="loginBtn" class="btn-primary">লগইন করুন</button>
-            <p style="margin-top:12px;font-size:13px;color:var(--text-faint);text-align:center;">ডিফল্ট: admin / admin123</p>
+            <p>ডিফল্ট: admin / admin123</p>
         </div>
     </div>
 
@@ -166,19 +201,14 @@
             <button id="logoutBtn">🚪 লগআউট</button>
             <h2><span class="material-symbols-outlined">dashboard</span> SHAGORBENZ অ্যাডমিন প্যানেল</h2>
             <div class="admin-tabs">
-                <!-- ✅ 1st: Sales Analytics -->
                 <button class="admin-tab active" data-tab="tab-analytics">📊 সেলস অ্যানালিটিক্স</button>
-                <!-- ✅ 2nd: Orders -->
                 <button class="admin-tab" data-tab="tab-orders">📦 অর্ডার ম্যানেজ</button>
-                <!-- ✅ 3rd: Reviews -->
                 <button class="admin-tab" data-tab="tab-reviews">🗑️ রিভিউ ম্যানেজ</button>
-                <!-- ✅ 4th: Edit -->
                 <button class="admin-tab" data-tab="tab-edit">✏️ প্রোডাক্ট এডিট</button>
-                <!-- ✅ 5th: Upload -->
                 <button class="admin-tab" data-tab="tab-upload">➕ প্রোডাক্ট আপলোড</button>
             </div>
 
-            <!-- ✅ 1st Panel: Analytics -->
+            <!-- 1. Analytics -->
             <div id="tab-analytics" class="admin-panel active">
                 <div id="analyticsLoader" class="empty-state" style="padding:20px 0;">
                     <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
@@ -187,7 +217,7 @@
                 <div id="analyticsContent"></div>
             </div>
 
-            <!-- ✅ 2nd Panel: Orders -->
+            <!-- 2. Orders -->
             <div id="tab-orders" class="admin-panel">
                 <div id="ordersLoader" class="empty-state" style="padding:20px 0;">
                     <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
@@ -196,7 +226,7 @@
                 <div class="admin-order-list" id="adminOrderList"></div>
             </div>
 
-            <!-- ✅ 3rd Panel: Reviews -->
+            <!-- 3. Reviews -->
             <div id="tab-reviews" class="admin-panel">
                 <div id="reviewLoader" class="empty-state" style="padding:20px 0;">
                     <div class="loader-ring" style="width:30px;height:30px;margin:0 auto;"></div>
@@ -214,7 +244,7 @@
                 </div>
             </div>
 
-            <!-- ✅ 4th Panel: Edit -->
+            <!-- 4. Edit -->
             <div id="tab-edit" class="admin-panel">
                 <div id="editSuccess" class="admin-success-msg">✅ প্রোডাক্ট সফলভাবে আপডেট হয়েছে!</div>
                 <div class="admin-product-list" id="adminProductList">
@@ -264,7 +294,7 @@
                 </div>
             </div>
 
-            <!-- ✅ 5th Panel: Upload -->
+            <!-- 5. Upload -->
             <div id="tab-upload" class="admin-panel">
                 <div id="uploadSuccess" class="admin-success-msg">✅ প্রোডাক্ট সফলভাবে আপলোড হয়েছে!</div>
                 <form id="adminProductForm" class="admin-form">
