@@ -2,19 +2,26 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>SHAGORBENZ — প্রিমিয়াম ই-কমার্স</title>
-    <meta name="description" content="SHAGORBENZ থেকে সেরা মানের ফোন, স্মার্টওয়াচ, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও গ্যাজেট কিনুন সেরা দামে।" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SHAGORBENZ — সেরা মানের পণ্য, সেরা দামে</title>
+    <meta name="description" content="SHAGORBENZ থেকে সেরা মানের ফোন, স্মার্টওয়াচ, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও গ্যাজেট কিনুন সেরা দামে। সারা বাংলাদেশে ডেলিভারি।" />
     <link rel="canonical" href="https://shagorbenz.com/" />
-    <link rel="icon" type="image/jpeg" href="./logo.jpeg" />
-    <link rel="apple-touch-icon" href="./logo.jpeg" />
-    <meta name="theme-color" content="#f7f5f0" />
+    <meta name="theme-color" content="#0b1220" />
     <meta name="color-scheme" content="light" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SHAGORBENZ" />
+    <meta property="og:title" content="SHAGORBENZ — সেরা মানের পণ্য, সেরা দামে" />
+    <meta property="og:description" content="ফোন, স্মার্টওয়াচ, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও গ্যাজেট — সারা বাংলাদেশে ডেলিভারি।" />
+    <meta property="og:image" content="https://shagorbenz.com/logo.jpeg" />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="icon" type="image/png" href="/logo-mark.png" />
+    <link rel="apple-touch-icon" href="/logo-mark.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HSFDQ2950J"></script>
@@ -25,377 +32,421 @@
         gtag('config', 'G-HSFDQ2950J');
     </script>
 
-    <!-- OneSignal -->
+    <!-- OneSignal push notifications -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.init({
-                appId: "9781903e-892d-4ff5-98c1-676b758627fc",
-                safari_web_id: "web.onesignal.auto.57017d41-c410-4109-8af6-455278482fbc",
-                notifyButton: { enable: true, size: 'medium', position: 'bottom-left', offset: { bottom: '80px', left: '15px' } },
-                welcomeNotification: { title: "SHAGORBENZ 🚀", message: "নোটিফিকেশন সাবস্ক্রাইব করার জন্য ধন্যবাদ!", url: window.location.origin }
-            });
-            if (OneSignal.User?.PushSubscription?.id) {
-                localStorage.setItem('oneSignalPlayerId', OneSignal.User.PushSubscription.id);
+        OneSignalDeferred.push(async function (OneSignal) {
+            try {
+                await OneSignal.init({
+                    appId: "9781903e-892d-4ff5-98c1-676b758627fc",
+                    safari_web_id: "web.onesignal.auto.57017d41-c410-4109-8af6-455278482fbc",
+                    notifyButton: { enable: true, size: 'medium', position: 'bottom-left', offset: { bottom: '84px', left: '16px' } },
+                    welcomeNotification: { title: "SHAGORBENZ", message: "নোটিফিকেশন সাবস্ক্রাইব করার জন্য ধন্যবাদ!", url: window.location.origin }
+                });
+            } catch (err) {
+                console.warn('OneSignal init skipped:', err);
             }
-            OneSignal.User.PushSubscription.addEventListener('change', (event) => {
-                if (event.current?.id) localStorage.setItem('oneSignalPlayerId', event.current.id);
-            });
         });
     </script>
 
-    <link rel="stylesheet" href="style.css" />
-
-    <!-- Supabase Import Map -->
-    <script type="importmap">
-        {
-            "imports": {
-                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/store.css" />
 </head>
 <body>
+    <a class="skip-link" href="#catalog">পণ্যের তালিকায় যান</a>
 
-    <a href="#mainContent" class="skip-link">মূল কনটেন্টে যান</a>
-
-    <div id="pageLoader" class="page-loader">
-        <div class="loader-ring"></div>
-        <p class="loader-text">লোড হচ্ছে...</p>
-    </div>
-
-    <header id="siteHeader">
-        <div class="header-inner">
-            <div class="logo">
-                <img src="./logo.jpeg" alt="SHAGORBENZ" class="logo-img" />
-                <span class="logo-text">SHAGOR<span>BENZ</span></span>
-            </div>
-
-            <div class="header-search">
-                <span class="material-symbols-outlined search-icon">search</span>
-                <input type="text" id="productSearch" placeholder="প্রোডাক্ট, ব্র্যান্ড খুঁজুন..." autocomplete="off" aria-label="প্রোডাক্ট খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" />
-                <button type="button" id="clearSearchBtn" class="clear-search-btn" aria-label="খোঁজ মুছুন" hidden>
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-                <div id="searchResults" class="search-results" role="listbox"></div>
-            </div>
-
-            <div class="header-actions">
-                <!-- ✅ অ্যাডমিন টগল বাটন সরানো হয়েছে -->
-                <button id="wishlistBtn" class="icon-btn" title="পছন্দের তালিকা" aria-label="পছন্দের তালিকা">
-                    <span class="material-symbols-outlined">favorite</span>
-                    <span class="badge" id="wishlistCount">0</span>
-                </button>
-                <button id="historyBtn" class="icon-btn" title="অর্ডার হিস্ট্রি" aria-label="অর্ডার হিস্ট্রি">
-                    <span class="material-symbols-outlined">history</span>
-                </button>
-                <button id="cartBtn" class="icon-btn cart-btn" title="কার্ট" aria-label="কার্ট">
-                    <span class="material-symbols-outlined">shopping_bag</span>
-                    <span class="badge" id="cartCount">0</span>
-                </button>
+    <div id="app">
+        <!-- Announcement bar -->
+        <div class="announce">
+            <div class="container announce-inner">
+                <p id="announceText"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-truck"></use></svg> সারা বাংলাদেশে ডেলিভারি</p>
+                <a id="announceWhatsapp" href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer">
+                    <svg class="icon icon-fill" aria-hidden="true"><use href="/icons.svg#i-whatsapp"></use></svg>
+                    <span>হোয়াটসঅ্যাপ: ০১৮৫১-১৪৯২৩০</span>
+                </a>
             </div>
         </div>
-    </header>
 
-    <main id="mainContent">
-        <div class="shop-layout" id="shopSection">
-            <div class="filter-overlay" id="filterOverlay"></div>
-            <aside class="filter-panel" id="filterPanel" aria-label="ক্যাটাগরি">
-                <div class="filter-panel-header">
-                    <h3><span class="material-symbols-outlined">category</span>ক্যাটাগরি</h3>
-                    <button id="closeFiltersBtn" class="close-btn" aria-label="বন্ধ করুন">
-                        <span class="material-symbols-outlined">close</span>
+        <!-- Header -->
+        <header class="site-header" id="siteHeader">
+            <div class="container header-inner">
+                <a class="brand" href="/" aria-label="SHAGORBENZ হোম">
+                    <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" />
+                    <span class="brand-name">SHAGOR<span>BENZ</span></span>
+                </a>
+
+                <form class="search" id="searchForm" role="search" autocomplete="off">
+                    <svg class="icon search-icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
+                    <input type="search" id="searchInput" placeholder="পণ্যের নাম বা ক্যাটাগরি খুঁজুন…" aria-label="পণ্য খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list" enterkeyhint="search" />
+                    <button type="button" class="search-clear" id="searchClear" aria-label="খোঁজ মুছুন" hidden>
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
                     </button>
-                </div>
-                <div class="filter-panel-body">
-                    <div class="filter-group">
-                        <h4 class="filter-group-title">ক্যাটাগরি</h4>
-                        <ul class="filter-list" id="categoryContainer">
-                            <li><button class="filter-item active" data-category="all">
-                                <span class="material-symbols-outlined">apps</span>সকল প্রোডাক্ট
-                            </button></li>
-                        </ul>
-                    </div>
-                    <div class="filter-group">
-                        <h4 class="filter-group-title">মূল্য পরিসীমা</h4>
-                        <ul class="filter-list" id="priceFilterContainer">
-                            <li><button class="filter-item active" data-range="all">সকল মূল্য</button></li>
-                            <li><button class="filter-item" data-range="0-1000">১,০০০৳ এর নিচে</button></li>
-                            <li><button class="filter-item" data-range="1000-3000">১,০০০ – ৩,০০০৳</button></li>
-                            <li><button class="filter-item" data-range="3000-6000">৩,০০০ – ৬,০০০৳</button></li>
-                            <li><button class="filter-item" data-range="6000-plus">৬,০০০৳ এর বেশি</button></li>
-                        </ul>
-                    </div>
-                    <div class="filter-group">
-                        <h4 class="filter-group-title">সাজান</h4>
-                        <select id="sortSelect" class="select-input">
-                            <option value="default">জনপ্রিয়তা</option>
-                            <option value="price-asc">দাম: কম থেকে বেশি</option>
-                            <option value="price-desc">দাম: বেশি থেকে কম</option>
-                            <option value="discount">সর্বোচ্চ ছাড়</option>
-                            <option value="name-asc">নাম: A-Z</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-check">
-                            <input type="checkbox" id="discountOnlyCheck" />
-                            <span>শুধু ছাড়ের প্রোডাক্ট</span>
-                        </label>
-                        <label class="filter-check">
-                            <input type="checkbox" id="inStockOnlyCheck" />
-                            <span>শুধু স্টকে আছে</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="filter-panel-footer">
-                    <button id="resetFiltersBtn" class="btn-ghost btn-block">রিসেট করুন</button>
-                </div>
-            </aside>
-
-            <section class="products-area">
-                <div class="toolbar-row">
-                    <span class="result-count" id="resultCount"></span>
-                    <button id="openFiltersBtn" class="filter-trigger-btn">
-                        <span class="material-symbols-outlined">category</span>ক্যাটাগরি
-                    </button>
-                </div>
-                <div class="product-grid" id="productContainer"></div>
-                
-            </section>
-        </div>
-    </main>
-
-    <!-- Product Detail Panel -->
-    <div class="product-detail-overlay" id="productDetailOverlay"></div>
-    <aside class="product-detail-panel" id="productDetailPanel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
-        <div class="product-detail-header">
-            <h3>প্রোডাক্ট বিস্তারিত</h3>
-            <button id="closeProductDetail" class="back-btn" aria-label="ফিরে যান">
-                <span class="material-symbols-outlined">arrow_back</span>
-            </button>
-        </div>
-        <div class="product-detail-body">
-            <img id="detailImage" src="" alt="" />
-            <h2 id="detailTitle"></h2>
-            <div class="modal-rating-row" id="detailRating"></div>
-            <div class="modal-price-row">
-                <p id="detailPrice" class="modal-price"></p>
-                <span id="detailDiscount" class="modal-discount-badge"></span>
-            </div>
-            <p id="detailStock" class="modal-stock"></p>
-            <p id="detailDesc" class="modal-desc"></p>
-            <div class="detail-actions">
-                <button id="detailAddBtn" class="btn-primary">
-                    <span class="material-symbols-outlined">add_shopping_cart</span>
-                    কার্টে যোগ করুন
-                </button>
-                <button id="detailWishlistBtn" class="btn-outline" aria-label="পছন্দে যোগ করুন">
-                    <span class="material-symbols-outlined">favorite</span>
-                </button>
-            </div>
-
-            <div class="review-section">
-                <div class="review-section-header">
-                    <h3>গ্রাহক রিভিউ</h3>
-                    <span class="review-summary" id="reviewSummary"></span>
-                </div>
-                <div id="detailReviews" class="review-list"></div>
-
-                <form id="reviewForm" class="review-form">
-                    <h4>আপনার অভিজ্ঞতা লিখুন</h4>
-                    <div class="review-star-picker" id="reviewStarPicker" role="radiogroup" aria-label="রেটিং দিন">
-                        <button type="button" class="star-pick" data-value="1" aria-label="১ স্টার"><span class="material-symbols-outlined">star</span></button>
-                        <button type="button" class="star-pick" data-value="2" aria-label="২ স্টার"><span class="material-symbols-outlined">star</span></button>
-                        <button type="button" class="star-pick" data-value="3" aria-label="৩ স্টার"><span class="material-symbols-outlined">star</span></button>
-                        <button type="button" class="star-pick" data-value="4" aria-label="৪ স্টার"><span class="material-symbols-outlined">star</span></button>
-                        <button type="button" class="star-pick" data-value="5" aria-label="৫ স্টার"><span class="material-symbols-outlined">star</span></button>
-                    </div>
-                    <input type="text" id="reviewNameInput" placeholder="আপনার নাম" maxlength="40" autocomplete="name" />
-                    <textarea id="reviewCommentInput" rows="3" placeholder="প্রোডাক্টটি কেমন লাগলো লিখুন..." maxlength="400"></textarea>
-                    <button type="submit" class="btn-primary btn-block" id="submitReviewBtn">রিভিউ জমা দিন</button>
+                    <div class="search-results" id="searchResults" role="listbox" aria-label="সার্চ ফলাফল" hidden></div>
                 </form>
-            </div>
-        </div>
-    </aside>
 
-    <!-- Cart Sidebar -->
-    <div class="cart-overlay" id="cartOverlay"></div>
-    <aside class="cart-sidebar" id="cartSidebar" role="dialog" aria-modal="true" aria-label="কার্ট">
-        <div class="cart-header">
-            <h3>
-                <span class="material-symbols-outlined">shopping_bag</span>
-                আপনার কার্ট
-            </h3>
-            <button id="closeCart" class="close-btn" aria-label="বন্ধ করুন">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <div class="cart-slider-wrapper" id="cartSliderWrapper">
-            <div class="cart-slide" id="slide1">
-                <div class="cart-slide-inner">
-                    <div id="cartItems" class="cart-items"></div>
-                    <div class="cart-options">
-                        <div class="option-group coupon-group">
-                            <input type="text" id="couponInput" placeholder="প্রোমো কোড" aria-label="প্রোমো কোড" />
-                            <button id="applyCouponBtn" class="btn-primary btn-sm">প্রয়োগ</button>
-                        </div>
-                    </div>
-                    <div class="bill-summary">
-                        <div class="bill-row"><span>প্রোডাক্ট মূল্য</span><span id="originalTotalAmount">0</span></div>
-                        <div class="bill-row"><span>ডিসকাউন্ট মূল্য</span><span id="subTotalAmount">0</span></div>
-                        <div class="bill-row" id="discountRow" style="display:none;">
-                            <span>ছাড় (<span id="couponCodeLabel"></span>)</span>
-                            <span>- <span id="discountAmount">0</span></span>
-                        </div>
-                    </div>
-                    <button class="btn-primary btn-block" id="goToCheckoutBtn">পরবর্তী ধাপ →</button>
-                </div>
-            </div>
-            <div class="cart-slide" id="slide2">
-                <div class="cart-slide-inner">
-                    <div class="checkout-header">
-                        <button id="backToCartBtn" class="back-btn" aria-label="পেছনে যান">
-                            <span class="material-symbols-outlined">arrow_back</span>
-                        </button>
-                        <h3>
-                            <span class="material-symbols-outlined">receipt_long</span>
-                            অর্ডারের তথ্য
-                        </h3>
-                    </div>
-                    <div class="checkout-form">
-                        <div class="option-group">
-                            <label for="deliveryArea">ডেলিভারি এলাকা</label>
-                            <select id="deliveryArea" class="select-input">
-                                <option value="inside" data-charge="80">ঢাকার ভিতরে</option>
-                                <option value="outside" data-charge="110">ঢাকার বাইরে</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="custName">আপনার নাম *</label>
-                            <input type="text" id="custName" placeholder="আপনার সম্পূর্ণ নাম লিখুন" autocomplete="name" />
-                        </div>
-                        <div class="form-group">
-                            <label for="custAddress">ডেলিভারি ঠিকানা *</label>
-                            <textarea id="custAddress" rows="3" placeholder="পূর্ণ ঠিকানা লিখুন" autocomplete="street-address"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="custPhone">মোবাইল নম্বর *</label>
-                            <input type="tel" id="custPhone" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric" autocomplete="tel" />
-                            <span class="error-msg" id="phoneError">সঠিক ১১ ডিজিটের নম্বর দিন</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="custNote">অতিরিক্ত নোট (ঐচ্ছিক)</label>
-                            <input type="text" id="custNote" placeholder="কোনো বিশেষ নির্দেশনা থাকলে লিখুন" />
-                        </div>
-                        <label class="remember-check">
-                            <input type="checkbox" id="rememberInfo" />
-                            <span>পরবর্তী অর্ডারের জন্য তথ্য সংরক্ষণ করুন</span>
-                        </label>
-                    </div>
-                    <div class="bill-summary checkout-bill">
-                        <div class="bill-row"><span>প্রোডাক্ট মূল্য</span><span id="subTotalAmount2">0</span></div>
-                        <div class="bill-row" id="discountRow2" style="display:none;">
-                            <span>ছাড় (<span id="couponCodeLabel2"></span>)</span>
-                            <span>- <span id="discountAmount2">0</span></span>
-                        </div>
-                        <div class="bill-row"><span>ডেলিভারি চার্জ</span><span id="deliveryChargeAmount2">0</span></div>
-                        <div class="bill-row total"><span>সর্বমোট</span><span id="cartTotalAmount2">0</span></div>
-                    </div>
-                    <button class="btn-primary btn-block" id="checkoutBtn">
-                        <span class="btn-text">অর্ডার নিশ্চিত করুন</span>
-                        <span class="btn-spinner" style="display:none;"></span>
+                <div class="header-actions">
+                    <button type="button" class="icon-btn hide-mobile" id="historyBtn" aria-label="আমার অর্ডার" title="আমার অর্ডার">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg>
+                    </button>
+                    <button type="button" class="icon-btn hide-mobile" id="wishlistBtn" aria-label="পছন্দের তালিকা" title="পছন্দের তালিকা">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-heart"></use></svg>
+                        <span class="count" id="wishlistCount" hidden>0</span>
+                    </button>
+                    <button type="button" class="cart-pill" id="cartBtn" aria-label="কার্ট দেখুন">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-shopping-bag"></use></svg>
+                        <span class="cart-pill-label">কার্ট</span>
+                        <span class="count" id="cartCount" hidden>0</span>
                     </button>
                 </div>
             </div>
-        </div>
-    </aside>
+        </header>
 
-    <!-- Modals -->
-    <div id="orderSuccessModal" class="modal" role="dialog" aria-modal="true">
-        <div class="modal-content success-content">
-            <span class="material-symbols-outlined success-icon">check_circle</span>
-            <h2>অর্ডার সফল!</h2>
-            <p>আপনার অর্ডারটি গ্রহণ করা হয়েছে।</p>
-            <p class="sub-text" id="successOrderId"></p>
-            <p class="sub-text">খুব শীঘ্রই আমাদের প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।</p>
-            <button id="closeSuccessBtn" class="btn-primary">ঠিক আছে</button>
-        </div>
-    </div>
+        <main id="main">
+            <!-- Hero -->
+            <section class="hero" aria-labelledby="heroTitle">
+                <div class="container hero-inner">
+                    <div class="hero-copy">
+                        <span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-zap"></use></svg> SHAGORBENZ</span>
+                        <h1 id="heroTitle">সেরা মানের পণ্য,<br /><em>সেরা দামে</em></h1>
+                        <p>পছন্দের পণ্য বেছে নিন, নাম–ঠিকানা–ফোন নম্বর দিয়ে অর্ডার করুন। বাকিটা আমাদের — আপনার দরজা পর্যন্ত পৌঁছে দেব।</p>
+                        <div class="hero-actions">
+                            <a class="btn btn-brand btn-lg" href="#catalog">
+                                কেনাকাটা শুরু করুন
+                                <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-right"></use></svg>
+                            </a>
+                            <button type="button" class="btn btn-outline-light btn-lg" data-action="open-history">আমার অর্ডার দেখুন</button>
+                        </div>
+                    </div>
+                    <div class="hero-art" aria-hidden="true">
+                        <img src="/logo-hero.webp" alt="" width="290" height="290" fetchpriority="high" />
+                    </div>
+                </div>
+            </section>
 
-    <div id="emptyCartModal" class="modal" role="dialog" aria-modal="true">
-        <div class="modal-content empty-cart-content">
-            <span class="material-symbols-outlined empty-icon">remove_shopping_cart</span>
-            <h2>কার্ট খালি</h2>
-            <p>আপনার কার্টে কোনো প্রোডাক্ট নেই।</p>
-            <button id="closeEmptyCartBtn" class="btn-primary">ঠিক আছে</button>
-        </div>
-    </div>
+            <!-- Trust strip -->
+            <section class="trust" aria-label="আমাদের সুবিধা">
+                <div class="container trust-grid">
+                    <div class="trust-item">
+                        <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-truck"></use></svg></span>
+                        <div><strong>সারা দেশে ডেলিভারি</strong><span>ঢাকার ভিতরে ও বাইরে</span></div>
+                    </div>
+                    <div class="trust-item">
+                        <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg></span>
+                        <div><strong>লাইভ অর্ডার ট্র্যাকিং</strong><span>নম্বর ছাড়াই, এই ব্রাউজারেই অবস্থা দেখুন</span></div>
+                    </div>
+                    <div class="trust-item">
+                        <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg></span>
+                        <div><strong>সহজ অর্ডার</strong><span>অ্যাকাউন্ট ছাড়াই কেনাকাটা</span></div>
+                    </div>
+                    <div class="trust-item">
+                        <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-headset"></use></svg></span>
+                        <div><strong>হোয়াটসঅ্যাপ সাপোর্ট</strong><span>যেকোনো প্রশ্নে সরাসরি মেসেজ</span></div>
+                    </div>
+                </div>
+            </section>
 
-    <div id="wishlistModal" class="modal" role="dialog" aria-modal="true" aria-label="পছন্দের তালিকা">
-        <div class="modal-content wishlist-content">
-            <button id="closeWishlistModal" class="close-btn" aria-label="বন্ধ করুন">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-            <h2><span class="material-symbols-outlined">favorite</span> পছন্দের তালিকা</h2>
-            <div id="wishlistItems" class="wishlist-items"></div>
-        </div>
-    </div>
+            <!-- Catalog -->
+            <section class="catalog" id="catalog" aria-labelledby="catalogTitle" tabindex="-1">
+                <div class="container">
+                    <div class="catalog-head">
+                        <h2 id="catalogTitle">সব পণ্য</h2>
+                    </div>
 
-    <!-- ✅ আপডেট করা অর্ডার হিস্ট্রি মডাল -->
-    <div id="orderHistoryModal" class="modal" role="dialog" aria-modal="true" aria-label="অর্ডার হিস্ট্রি">
-        <div class="modal-content history-content">
-            <button id="closeOrderHistoryModal" class="close-btn" aria-label="বন্ধ করুন">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-            <h2><span class="material-symbols-outlined">history</span> অর্ডার হিস্ট্রি</h2>
-            
-            <!-- ফোন ইনপুট ও ফেচ বাটন -->
-            <div class="history-fetch-area" style="display:flex; gap:8px; margin-bottom:16px; align-items:center;">
-                <input type="tel" id="historyPhoneInput" placeholder="আপনার মোবাইল নম্বর দিন" maxlength="11" style="flex:1; padding:10px 14px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-sm); color:var(--text); font-size:14px;">
-                <button id="fetchOrderBtn" class="btn-primary" style="width:auto; padding:10px 20px;">খুঁজুন</button>
+                    <div class="chips-wrap">
+                        <div class="chips" id="categoryChips" role="group" aria-label="ক্যাটাগরি">
+                            <button type="button" class="chip is-active" data-category="all" aria-pressed="true">
+                                <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-layout-grid"></use></svg>সব পণ্য
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="catalog-layout">
+                        <aside class="filters" id="filterSidebar" aria-label="ফিল্টার"></aside>
+
+                        <div class="results">
+                            <div class="toolbar">
+                                <p class="result-count" id="resultCount" aria-live="polite"></p>
+                                <div class="toolbar-actions">
+                                    <button type="button" class="btn btn-outline btn-sm filter-open" id="openFilters">
+                                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-sliders-horizontal"></use></svg>
+                                        ফিল্টার <span class="count count-inline" id="filterCount" hidden>0</span>
+                                    </button>
+                                    <label class="select-wrap">
+                                        <span class="sr-only">সাজান</span>
+                                        <select id="sortSelect" class="select">
+                                            <option value="default">ফিচার্ড</option>
+                                            <option value="newest">নতুন আসা</option>
+                                            <option value="price-asc">দাম: কম থেকে বেশি</option>
+                                            <option value="price-desc">দাম: বেশি থেকে কম</option>
+                                            <option value="discount">সর্বোচ্চ ছাড়</option>
+                                            <option value="name-asc">নাম: A–Z</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="active-filters" id="activeFilters" hidden></div>
+
+                            <div class="product-grid" id="productGrid" aria-busy="true"></div>
+
+                            <div class="load-more" id="loadMoreWrap" hidden>
+                                <button type="button" class="btn btn-outline btn-lg" id="loadMoreBtn">আরও পণ্য দেখুন</button>
+                            </div>
+
+                            <section class="recent" id="recentSection" aria-labelledby="recentTitle" hidden>
+                                <h2 id="recentTitle">সম্প্রতি দেখেছেন</h2>
+                                <div class="product-grid product-grid-compact" id="recentGrid"></div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div class="container footer-grid">
+                <div class="footer-brand">
+                    <a class="brand brand-light" href="/" aria-label="SHAGORBENZ">
+                        <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" loading="lazy" />
+                        <span class="brand-name">SHAGOR<span>BENZ</span></span>
+                    </a>
+                    <p>বিশ্বস্ত পণ্য, সঠিক দাম আর সহজ অর্ডার — সারা বাংলাদেশে।</p>
+                </div>
+                <div>
+                    <h3>দ্রুত লিংক</h3>
+                    <ul>
+                        <li><a href="#catalog">সব পণ্য</a></li>
+                        <li><button type="button" class="link-btn" data-action="open-history">আমার অর্ডার দেখুন</button></li>
+                        <li><button type="button" class="link-btn" data-action="open-wishlist">পছন্দের তালিকা</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>যোগাযোগ</h3>
+                    <ul>
+                        <li><a href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer">হোয়াটসঅ্যাপ: ০১৮৫১-১৪৯২৩০</a></li>
+                        <li id="footerDelivery"></li>
+                    </ul>
+                </div>
             </div>
-
-            <div id="orderHistoryContainer" class="history-list"></div>
-        </div>
+            <div class="container footer-bottom">
+                <p>© <span id="year">2026</span> SHAGORBENZ. সর্বস্বত্ব সংরক্ষিত।</p>
+            </div>
+        </footer>
     </div>
 
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <noscript><p class="noscript">এই সাইটটি চালাতে JavaScript চালু করুন।</p></noscript>
 
-    <button id="backToTopBtn" class="back-top-btn" aria-label="উপরে যান">
-        <span class="material-symbols-outlined">arrow_upward</span>
+    <!-- Floating actions -->
+    <a class="fab fab-whatsapp" id="whatsappFloat" href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer" aria-label="হোয়াটসঅ্যাপে যোগাযোগ করুন">
+        <svg class="icon icon-fill" aria-hidden="true"><use href="/icons.svg#i-whatsapp"></use></svg>
+    </a>
+    <button type="button" class="fab fab-top" id="backToTop" aria-label="উপরে যান">
+        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-up"></use></svg>
     </button>
 
-    <a id="whatsappFloat" href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer" class="whatsapp-float" aria-label="হোয়াটসঅ্যাপে যোগাযোগ করুন">
-        <svg viewBox="0 0 24 24" fill="#fff"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm5.78 14.11c-.24.68-1.4 1.3-1.93 1.38-.5.08-1.12.11-1.8-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.79-4.17-4.94-4.36-.14-.19-1.18-1.57-1.18-3 0-1.43.75-2.13 1.02-2.42.27-.29.58-.36.78-.36.2 0 .39 0 .56.01.18.01.42-.07.66.5.24.58.82 2.01.9 2.16.08.15.13.32.02.51-.1.19-.15.31-.3.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.23 1.61 1.99 1.11.98 2.04 1.29 2.33 1.44.29.14.46.12.63-.07.17-.19.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.66.78 1.94.92.28.14.47.21.53.33.07.12.07.68-.17 1.36z"/></svg>
-    </a>
-
+    <!-- Mobile bottom navigation -->
     <nav class="mobile-nav" aria-label="মোবাইল নেভিগেশন">
-        <button class="nav-item" id="navHomeBtn">
-            <span class="material-symbols-outlined">home</span>
-            <span>হোম</span>
+        <button type="button" class="nav-item" data-action="nav-home">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-house"></use></svg><span>হোম</span>
         </button>
-        <button class="nav-item" id="navCategoryBtn">
-            <span class="material-symbols-outlined">category</span>
-            <span>ক্যাটাগরি</span>
+        <button type="button" class="nav-item" data-action="nav-categories">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-layout-grid"></use></svg><span>ক্যাটাগরি</span>
         </button>
-        <button class="nav-item" id="mobileCartBtn">
-            <span class="material-symbols-outlined">shopping_bag</span>
-            <span>কার্ট</span>
-            <span class="badge mobile-badge" id="mobileCartCount">0</span>
+        <button type="button" class="nav-item" data-action="open-cart">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-shopping-bag"></use></svg><span>কার্ট</span>
+            <span class="count" id="navCartCount" hidden>0</span>
         </button>
-        <button class="nav-item" id="mobileHistoryBtn">
-            <span class="material-symbols-outlined">history</span>
-            <span>হিস্ট্রি</span>
+        <button type="button" class="nav-item" data-action="open-history">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg><span>অর্ডার</span>
         </button>
-        <button class="nav-item" id="mobileWishlistBtn">
-            <span class="material-symbols-outlined">favorite</span>
-            <span>পছন্দ</span>
+        <button type="button" class="nav-item" data-action="open-wishlist">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-heart"></use></svg><span>পছন্দ</span>
+            <span class="count" id="navWishCount" hidden>0</span>
         </button>
     </nav>
 
-    <script type="module" src="products.js"></script>
-    <script type="module" src="main.js"></script>
+    <!-- ═════════════ Dialogs ═════════════ -->
+
+    <!-- Product detail -->
+    <dialog id="detailDialog" class="overlay overlay-center" aria-label="পণ্যের বিস্তারিত">
+        <div class="panel panel-xl">
+            <button type="button" class="icon-btn panel-close" data-close aria-label="বন্ধ করুন">
+                <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+            </button>
+            <div id="detailContent" class="detail"></div>
+        </div>
+    </dialog>
+
+    <!-- Cart + checkout -->
+    <dialog id="cartDialog" class="overlay overlay-right" aria-labelledby="cartTitle">
+        <div class="panel panel-drawer" id="cartPanel" data-step="cart">
+            <header class="panel-head">
+                <button type="button" class="icon-btn" id="cartBack" data-action="cart-back" aria-label="কার্টে ফিরুন" hidden>
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-left"></use></svg>
+                </button>
+                <h2 id="cartTitle">আপনার কার্ট</h2>
+                <button type="button" class="icon-btn" data-close aria-label="বন্ধ করুন">
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+                </button>
+            </header>
+
+            <ol class="steps" aria-label="অর্ডারের ধাপ">
+                <li class="step is-active" data-step-ind="cart"><span class="step-num">১</span>কার্ট</li>
+                <li class="step-line" aria-hidden="true"></li>
+                <li class="step" data-step-ind="checkout"><span class="step-num">২</span>তথ্য ও কনফার্ম</li>
+            </ol>
+
+            <!-- Step 1 -->
+            <section class="step-pane" data-pane="cart">
+                <div class="panel-body" id="cartList"></div>
+                <footer class="panel-foot" id="cartFoot">
+                    <form class="coupon" id="couponForm" autocomplete="off">
+                        <label class="sr-only" for="couponInput">প্রোমো কোড</label>
+                        <input type="text" id="couponInput" placeholder="প্রোমো কোড আছে?" autocapitalize="characters" spellcheck="false" />
+                        <button type="submit" class="btn btn-outline btn-sm">প্রয়োগ করুন</button>
+                    </form>
+                    <div class="coupon-applied" id="couponApplied" hidden></div>
+                    <p class="savings-note" id="cartSavings" hidden></p>
+                    <dl class="summary" id="cartSummary"></dl>
+                    <button type="button" class="btn btn-primary btn-lg btn-block" id="toCheckout">
+                        চেকআউটে যান
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-right"></use></svg>
+                    </button>
+                </footer>
+            </section>
+
+            <!-- Step 2 -->
+            <form class="step-pane" data-pane="checkout" id="checkoutForm" novalidate hidden>
+                <div class="panel-body">
+                    <fieldset class="field-group">
+                        <legend>ডেলিভারি এলাকা</legend>
+                        <div class="radio-cards" id="deliveryOptions"></div>
+                    </fieldset>
+
+                    <div class="field">
+                        <label for="custName">আপনার নাম <abbr title="আবশ্যক">*</abbr></label>
+                        <input type="text" id="custName" name="name" autocomplete="name" placeholder="আপনার পুরো নাম" required aria-describedby="custNameError" />
+                        <p class="field-error" id="custNameError" role="alert"></p>
+                    </div>
+                    <div class="field">
+                        <label for="custPhone">মোবাইল নম্বর <abbr title="আবশ্যক">*</abbr></label>
+                        <input type="tel" id="custPhone" name="phone" autocomplete="tel" inputmode="tel" placeholder="01XXXXXXXXX" maxlength="18" required aria-describedby="custPhoneError" />
+                        <p class="field-error" id="custPhoneError" role="alert"></p>
+                    </div>
+                    <div class="field">
+                        <label for="custAltPhone">বিকল্প মোবাইল নম্বর <span class="optional">(ঐচ্ছিক)</span></label>
+                        <input type="tel" id="custAltPhone" name="altPhone" autocomplete="off" inputmode="tel" placeholder="প্রধান নম্বরে না পেলে এই নম্বরে ফোন করা হবে" maxlength="18" aria-describedby="custAltPhoneError" />
+                        <p class="field-error" id="custAltPhoneError" role="alert"></p>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="custDistrict">জেলা <abbr title="আবশ্যক">*</abbr></label>
+                            <select id="custDistrict" name="district" class="select" autocomplete="address-level1" required aria-describedby="custDistrictError">
+                                <option value="">জেলা বাছুন</option>
+                            </select>
+                            <p class="field-error" id="custDistrictError" role="alert"></p>
+                        </div>
+                        <div class="field">
+                            <label for="custThana">থানা / উপজেলা <abbr title="আবশ্যক">*</abbr></label>
+                            <input type="text" id="custThana" name="thana" autocomplete="address-level2" placeholder="যেমন: ধানমন্ডি" required aria-describedby="custThanaError" />
+                            <p class="field-error" id="custThanaError" role="alert"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="custAddress">ঠিকানা <abbr title="আবশ্যক">*</abbr></label>
+                        <textarea id="custAddress" name="address" rows="3" autocomplete="street-address" placeholder="বাসা/ফ্ল্যাট, রোড, এলাকা বা গ্রামের নাম" required aria-describedby="custAddressError"></textarea>
+                        <p class="field-error" id="custAddressError" role="alert"></p>
+                    </div>
+                    <div class="field">
+                        <label for="custNote">অতিরিক্ত নোট <span class="optional">(ঐচ্ছিক)</span></label>
+                        <input type="text" id="custNote" name="note" maxlength="200" placeholder="কোনো বিশেষ নির্দেশনা থাকলে লিখুন" />
+                    </div>
+                    <label class="check">
+                        <input type="checkbox" id="rememberInfo" />
+                        <span>পরের অর্ডারের জন্য আমার তথ্য এই ডিভাইসে সংরক্ষণ করুন</span>
+                    </label>
+
+                    <div class="order-review" id="checkoutReview"></div>
+                </div>
+                <footer class="panel-foot">
+                    <dl class="summary" id="checkoutSummary"></dl>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="placeOrderBtn">
+                        <span class="btn-label">অর্ডার নিশ্চিত করুন</span>
+                        <span class="spinner" aria-hidden="true"></span>
+                    </button>
+                    <p class="fine-print">অর্ডার করার পর আমাদের প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।</p>
+                </footer>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Filters (mobile sheet) -->
+    <dialog id="filterDialog" class="overlay overlay-sheet" aria-labelledby="filterTitle">
+        <div class="panel panel-sheet">
+            <header class="panel-head">
+                <h2 id="filterTitle">ফিল্টার</h2>
+                <button type="button" class="icon-btn" data-close aria-label="বন্ধ করুন">
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+                </button>
+            </header>
+            <div class="panel-body" id="filterSheetBody"></div>
+            <footer class="panel-foot panel-foot-row">
+                <button type="button" class="btn btn-outline btn-lg" data-action="reset-filters">রিসেট</button>
+                <button type="button" class="btn btn-primary btn-lg" id="applyFilters" data-close>ফলাফল দেখুন</button>
+            </footer>
+        </div>
+    </dialog>
+
+    <!-- Wishlist -->
+    <dialog id="wishlistDialog" class="overlay overlay-center" aria-labelledby="wishlistTitle">
+        <div class="panel panel-md">
+            <header class="panel-head">
+                <h2 id="wishlistTitle">পছন্দের তালিকা</h2>
+                <button type="button" class="icon-btn" data-close aria-label="বন্ধ করুন">
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+                </button>
+            </header>
+            <div class="panel-body" id="wishlistList"></div>
+        </div>
+    </dialog>
+
+    <!-- Order history -->
+    <dialog id="historyDialog" class="overlay overlay-center" aria-labelledby="historyTitle">
+        <div class="panel panel-md">
+            <header class="panel-head">
+                <h2 id="historyTitle">আমার অর্ডার</h2>
+                <button type="button" class="icon-btn" data-close aria-label="বন্ধ করুন">
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+                </button>
+            </header>
+            <div class="panel-body" id="historyResults" aria-live="polite"></div>
+        </div>
+    </dialog>
+
+    <!-- Order success -->
+    <dialog id="successDialog" class="overlay overlay-center" aria-labelledby="successTitle">
+        <div class="panel panel-sm success">
+            <span class="success-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-check"></use></svg></span>
+            <h2 id="successTitle">অর্ডার সফল হয়েছে!</h2>
+            <p>ধন্যবাদ! আপনার অর্ডারটি গ্রহণ করা হয়েছে। খুব শীঘ্রই আমাদের প্রতিনিধি আপনার সাথে যোগাযোগ করবেন।</p>
+            <div class="order-code">
+                <span>অর্ডার নম্বর</span>
+                <strong id="successOrderId"></strong>
+                <button type="button" class="btn btn-outline btn-sm" id="copyOrderId">
+                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-copy"></use></svg>কপি
+                </button>
+            </div>
+            <div class="success-actions">
+                <a class="btn btn-whatsapp btn-block" id="successWhatsapp" href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer">
+                    <svg class="icon icon-fill" aria-hidden="true"><use href="/icons.svg#i-whatsapp"></use></svg>হোয়াটসঅ্যাপে জানান
+                </a>
+                <button type="button" class="btn btn-outline btn-block" data-action="open-history">আমার অর্ডার দেখুন</button>
+                <button type="button" class="btn btn-primary btn-block" data-close>কেনাকাটা চালিয়ে যান</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script type="module" src="/src/store/app.js"></script>
 </body>
 </html>

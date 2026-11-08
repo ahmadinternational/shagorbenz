@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SHAGORBENZ — অ্যাডমিন প্যানেল</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="icon" type="image/png" href="/logo-mark.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/admin.css" />
+</head>
+<body class="admin">
+
+    <!-- ═════════ Login ═════════ -->
+    <main id="loginView" class="login-view">
+        <form id="loginForm" class="login-card" novalidate>
+            <img src="/logo-mark.png" alt="" class="login-logo" width="64" height="64" />
+            <h1>অ্যাডমিন লগইন</h1>
+            <p class="muted">SHAGORBENZ ম্যানেজমেন্ট প্যানেল</p>
+
+            <div class="field">
+                <label for="loginUser">ইউজারনেম</label>
+                <input type="text" id="loginUser" autocomplete="username" autocapitalize="none" spellcheck="false" required />
+            </div>
+            <div class="field">
+                <label for="loginPass">পাসওয়ার্ড</label>
+                <div class="pw">
+                    <input type="password" id="loginPass" autocomplete="current-password" required />
+                    <button type="button" class="icon-btn icon-btn-sm" id="togglePw" aria-label="পাসওয়ার্ড দেখান" aria-pressed="false">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-eye"></use></svg>
+                    </button>
+                </div>
+            </div>
+            <p class="login-error" id="loginError" role="alert" hidden></p>
+            <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">
+                <span class="btn-label">লগইন করুন</span><span class="spinner" aria-hidden="true"></span>
+            </button>
+            <a class="back-link" href="/">← স্টোরে ফিরে যান</a>
+        </form>
+    </main>
+
+    <!-- ═════════ Dashboard ═════════ -->
+    <div id="dashboard" class="shell" hidden>
+        <nav class="side" aria-label="অ্যাডমিন মেনু">
+            <a class="side-brand" href="/admin" aria-label="SHAGORBENZ অ্যাডমিন">
+                <img src="/logo-mark.png" alt="" width="36" height="36" />
+                <span><span class="sb-name">SHAGOR<b>BENZ</b></span><small>অ্যাডমিন</small></span>
+            </a>
+            <ul class="side-nav">
+                <li><button type="button" class="side-link is-active" data-tab="overview"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-chart-column"></use></svg><span>ওভারভিউ</span></button></li>
+                <li><button type="button" class="side-link" data-tab="orders"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg><span>অর্ডার</span><span class="count count-inline" id="newOrdersBadge" hidden>0</span></button></li>
+                <li><button type="button" class="side-link" data-tab="products"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-boxes"></use></svg><span>পণ্য</span></button></li>
+                <li><button type="button" class="side-link" data-tab="reviews"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-star"></use></svg><span>রিভিউ</span></button></li>
+            </ul>
+            <div class="side-foot">
+                <a href="/" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-store"></use></svg><span>স্টোর দেখুন</span></a>
+                <button type="button" id="logoutBtn"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-log-out"></use></svg><span>লগআউট</span></button>
+            </div>
+        </nav>
+
+        <div class="main">
+            <header class="topbar">
+                <h1 id="viewTitle">ওভারভিউ</h1>
+                <div class="topbar-actions">
+                    <span class="muted" id="lastUpdated"></span>
+                    <button type="button" class="icon-btn" id="refreshBtn" aria-label="রিফ্রেশ করুন" title="রিফ্রেশ">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-refresh-cw"></use></svg>
+                    </button>
+                    <button type="button" class="icon-btn only-mobile" id="logoutBtnMobile" aria-label="লগআউট">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-log-out"></use></svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content">
+                <section id="view-overview" class="view" aria-labelledby="viewTitle"></section>
+
+                <section id="view-orders" class="view" hidden>
+                    <div class="toolbar-a">
+                        <div class="search-a">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
+                            <input type="search" id="orderSearch" placeholder="অর্ডার নম্বর, নাম বা ফোন নম্বর…" aria-label="অর্ডার খুঁজুন" />
+                        </div>
+                    </div>
+                    <div class="chips-a" id="orderFilters" role="group" aria-label="স্ট্যাটাস ফিল্টার"></div>
+                    <div id="orderList" class="order-stack"></div>
+                    <div class="center" id="orderMoreWrap" hidden><button type="button" class="btn btn-outline" id="orderMore">আরও দেখুন</button></div>
+                </section>
+
+                <section id="view-products" class="view" hidden>
+                    <div class="toolbar-a">
+                        <div class="search-a">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
+                            <input type="search" id="productSearch" placeholder="পণ্যের নাম বা ক্যাটাগরি…" aria-label="পণ্য খুঁজুন" />
+                        </div>
+                        <button type="button" class="btn btn-primary" id="newProductBtn">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg>নতুন পণ্য
+                        </button>
+                    </div>
+                    <div id="productList" class="card-a list-a"></div>
+                </section>
+
+                <section id="view-reviews" class="view" hidden>
+                    <div id="reviewList" class="card-a list-a"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product editor -->
+    <dialog id="productDialog" class="overlay overlay-center" aria-labelledby="productDialogTitle">
+        <form class="panel panel-lg" id="productForm" novalidate>
+            <header class="panel-head">
+                <h2 id="productDialogTitle">নতুন পণ্য</h2>
+                <button type="button" class="icon-btn" data-close aria-label="বন্ধ করুন"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg></button>
+            </header>
+            <div class="panel-body">
+                <div class="field first">
+                    <label for="fTitle">পণ্যের নাম <abbr title="আবশ্যক">*</abbr></label>
+                    <input type="text" id="fTitle" required placeholder="যেমন: iPhone 15 Pro Max" aria-describedby="fTitleError" />
+                    <p class="field-error" id="fTitleError"></p>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="fCategory">ক্যাটাগরি <abbr title="আবশ্যক">*</abbr></label>
+                        <input type="text" id="fCategory" list="categoryOptions" required placeholder="যেমন: Phone" aria-describedby="fCategoryError" />
+                        <datalist id="categoryOptions"></datalist>
+                        <p class="field-error" id="fCategoryError"></p>
+                    </div>
+                    <div class="field">
+                        <label for="fPriority">প্রায়োরিটি <span class="optional">(ছোট = আগে)</span></label>
+                        <input type="text" inputmode="numeric" id="fPriority" value="0" />
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="fPrice">বর্তমান মূল্য (৳) <abbr title="আবশ্যক">*</abbr></label>
+                        <input type="text" inputmode="decimal" id="fPrice" required placeholder="450" aria-describedby="fPriceError" />
+                        <p class="field-error" id="fPriceError"></p>
+                    </div>
+                    <div class="field">
+                        <label for="fOldPrice">পূর্বের মূল্য <span class="optional">(ঐচ্ছিক)</span></label>
+                        <input type="text" inputmode="decimal" id="fOldPrice" placeholder="550" aria-describedby="fOldPriceError" />
+                        <p class="field-error" id="fOldPriceError"></p>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="fImage">ছবির লিঙ্ক <abbr title="আবশ্যক">*</abbr></label>
+                    <input type="url" id="fImage" required placeholder="https://example.com/image.jpg" aria-describedby="fImageError" />
+                    <p class="field-error" id="fImageError"></p>
+                    <div class="img-preview" id="imgPreview" hidden><img alt="ছবির প্রিভিউ" /></div>
+                </div>
+                <div class="field">
+                    <label for="fStock">স্টক পরিমাণ <abbr title="আবশ্যক">*</abbr></label>
+                    <input type="text" inputmode="numeric" id="fStock" value="20" required aria-describedby="fStockError" />
+                    <p class="field-error" id="fStockError"></p>
+                </div>
+                <fieldset class="field variants" aria-describedby="variantsHelp">
+                    <legend>অপশন <span class="optional">(রঙ / সাইজ ইত্যাদি — ঐচ্ছিক)</span></legend>
+                    <p class="muted" id="variantsHelp">অপশন যোগ করলে ক্রেতাকে অর্ডারের আগে একটি বেছে নিতে হবে। অপশনের মূল্য ফাঁকা রাখলে পণ্যের মূল্যই প্রযোজ্য হবে; স্টক ফাঁকা মানে আনলিমিটেড। অপশন থাকলে ওপরের স্টক ঘরটি আর ব্যবহার হয় না।</p>
+                    <div id="variantList" class="var-list"></div>
+                    <p class="field-error" id="variantsError" role="alert" style="display:block"></p>
+                    <button type="button" class="btn btn-outline btn-sm" id="addVariant">
+                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg>অপশন যোগ করুন
+                    </button>
+                </fieldset>
+                <div class="field">
+                    <label for="fDesc">বিবরণ <span class="optional">(ঐচ্ছিক)</span></label>
+                    <textarea id="fDesc" rows="4" placeholder="পণ্যের বিস্তারিত বিবরণ…"></textarea>
+                </div>
+            </div>
+            <footer class="panel-foot panel-foot-row">
+                <button type="button" class="btn btn-outline btn-lg" data-close>বাতিল</button>
+                <button type="submit" class="btn btn-primary btn-lg" id="productSaveBtn"><span class="btn-label">সংরক্ষণ করুন</span><span class="spinner" aria-hidden="true"></span></button>
+            </footer>
+        </form>
+    </dialog>
+
+    <!-- Confirm -->
+    <dialog id="confirmDialog" class="overlay overlay-center" aria-labelledby="confirmTitle">
+        <div class="panel panel-sm confirm">
+            <h2 id="confirmTitle"></h2>
+            <p id="confirmText"></p>
+            <div class="confirm-actions">
+                <button type="button" class="btn btn-outline" data-close>বাতিল</button>
+                <button type="button" class="btn btn-danger" id="confirmOk">নিশ্চিত করুন</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script type="module" src="/src/admin/app.js"></script>
+</body>
+</html>
