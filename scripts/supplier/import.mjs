@@ -15,6 +15,7 @@ import { parseArgs } from 'node:util';
 import { parseFeed, normalizeProduct } from './lib/feed.mjs';
 import { runImport, DEFAULTS } from './lib/engine.mjs';
 import { createSupabaseRepo } from './lib/repo-supabase.mjs';
+import { summariseFailures } from './lib/explain.mjs';
 
 const SUPPLIER = 'badhons-world';
 const STATE_DIR = path.resolve('.supplier-state');
@@ -98,6 +99,7 @@ async function main() {
 
     const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const repo = createSupabaseRepo({ url, serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY });
+    await repo.preflight(); // stops here with a plain explanation if the key is wrong or the migration has not been run
 
     if (command === 'report') {
         const { runs, mappings, openErrors } = await repo.report(v.supplier);
@@ -176,8 +178,8 @@ async function main() {
     log('\nresult' + (result.runId ? ` (run ${result.runId})` : ' (dry run)'));
     printStats(result.stats);
     if (result.failures.length) {
-        log(`  ${result.failures.length} failure(s) — first few:`);
-        result.failures.slice(0, 10).forEach((f) => log(`   ✗ ${f.supplier_product_id}: [${f.stage}] ${f.message}`));
+        log(`  ${result.failures.length} failure(s), grouped:`);
+        for (const g of summariseFailures(result.failures)) log(`   ✗ ×${g.count}  ${g.key}   (e.g. ${g.example})`);
         log('  retry them with: --retry-failed');
         process.exitCode = 1;
     }

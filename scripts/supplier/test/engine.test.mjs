@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { normalizeProduct, parseFeed, canonicalUrl, parseMoney } from '../lib/feed.mjs';
 import { runImport, sellingPrice } from '../lib/engine.mjs';
 import { createMemoryRepo } from './memory-repo.mjs';
+import { explainDbError, summariseFailures } from '../lib/explain.mjs';
+import { createSupabaseRepo } from '../lib/repo-supabase.mjs';
 
 const SUP = 'badhons-world';
 const raw = (n, extra = {}) => ({
@@ -328,4 +330,23 @@ test('image verification: unreachable main image fails the product; unreachable 
     assert.equal(r.stats.failed, 1);
     assert.equal(r.failures[0].stage, 'image');
     assert.deepEqual(repo.db.products[0].images, [], 'broken gallery image dropped');
+});
+
+// ───────── clear errors ─────────
+test('a placeholder key is refused before any request, with an instruction (and the key is never echoed)', () => {
+    assert.throws(() => createSupabaseRepo({ url: 'https://x.supabase.co', serviceKey: 'PASTE_YOUR_SERVICE_ROLE_KEY_HERE' }), /still the placeholder/);
+    assert.throws(() => createSupabaseRepo({ url: 'https://x.supabase.co', serviceKey: '' }), /not set/);
+});
+test('database/network errors are explained as actions', () => {
+    assert.match(explainDbError({ status: 401, message: 'Invalid API key' }), /service_role/);
+    assert.match(explainDbError({ code: '42501', message: 'permission denied for table supplier_products' }), /service_role/);
+    assert.match(explainDbError({ code: '42P01', message: 'relation "public.supplier_products" does not exist' }), /migration/i);
+    assert.match(explainDbError({ code: 'PGRST205', message: "Could not find the table 'public.supplier_products' in the schema cache" }), /migration/i);
+    assert.match(explainDbError(new Error('fetch failed')), /internet/i);
+    assert.equal(explainDbError({ message: 'something else' }), 'something else');
+});
+test('identical failures are grouped into one line with a count', () => {
+    const f = [...Array(141).fill({ supplier_product_id: 'A', stage: 'lookup', message: 'Invalid API key' }), ...Array(26).fill({ supplier_product_id: 'B', stage: 'validation', message: 'invalid price: 0' })];
+    const g = summariseFailures(f);
+    assert.deepEqual(g.map((x) => [x.key, x.count]), [['[lookup] Invalid API key', 141], ['[validation] invalid price: 0', 26]]);
 });

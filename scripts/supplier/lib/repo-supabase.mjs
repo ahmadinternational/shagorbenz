@@ -2,10 +2,12 @@
 // Row Level Security. Never put that key in the browser bundle, a VITE_* variable, or the repository.
 
 import { createClient } from '@supabase/supabase-js';
+import { explainDbError } from './explain.mjs';
 
 export function createSupabaseRepo({ url, serviceKey }) {
     if (!url) throw new Error('SUPABASE_URL is not set');
     if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set (server-side secret — see README)');
+    if (/PASTE_YOUR/.test(serviceKey)) throw new Error(explainDbError('PASTE_YOUR placeholder'));
     const db = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
     /** Unwraps a PostgREST response; keeps status/code so the engine can tell temporary errors from real ones. */
@@ -23,6 +25,11 @@ export function createSupabaseRepo({ url, serviceKey }) {
     };
 
     return {
+        /** One cheap read before anything else, so a wrong key / missing migration is reported once, clearly. */
+        async preflight() {
+            const { error, status } = await db.from('supplier_products').select('id').limit(1);
+            if (error) throw new Error(explainDbError({ message: error.message, code: error.code, status }));
+        },
         async findRunningRun(supplier) {
             const since = new Date(Date.now() - 6 * 3600e3).toISOString();
             const rows = ok(await db.from('supplier_import_runs').select('id, started_at').eq('supplier', supplier).eq('status', 'running').gte('started_at', since).limit(1));
