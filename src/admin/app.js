@@ -20,7 +20,7 @@ const STALE_MS = 30_000;
 const LOW_STOCK = 5;
 
 const data = { orders: [], products: [], reviews: [], loadedAt: { orders: 0, products: 0, reviews: 0 } };
-const ui = { tab: 'overview', orderFilter: 'all', orderQuery: '', orderVisible: PAGE, productQuery: '', editingId: null };
+const ui = { tab: 'overview', orderFilter: 'all', orderQuery: '', orderVisible: PAGE, productQuery: '', editingId: null, touched: new Set() };
 const newOrderIds = new Set();
 let unseenOrders = 0;
 let channel = null;
@@ -404,6 +404,35 @@ function stockChip(p) {
     return `<span class="stock-chip ok">স্টক: ${formatNumber(n)}</span>`;
 }
 
+/** Where a product came from. Only shown once the `is_supplier_product` column exists. */
+function sourceBadge(p) {
+    if (!('is_supplier_product' in p)) return '';
+    return p.is_supplier_product
+        ? '<span class="src-badge is-supplier">Badhon’s World</span>'
+        : '<span class="src-badge">SHAGORBENZ</span>';
+}
+
+/** The extra storefront columns arrive together in one migration; `is_active` is the marker. */
+const hasExtraColumns = () => data.products.some((p) => 'is_active' in p);
+
+const parseLines = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean);
+const specsToText = (raw) => {
+    let list = raw;
+    if (typeof list === 'string') {
+        try {
+            list = JSON.parse(list);
+        } catch {
+            list = [];
+        }
+    }
+    const rows = Array.isArray(list)
+        ? list.map((x) => [x?.label ?? x?.name ?? x?.key, x?.value])
+        : list && typeof list === 'object'
+          ? Object.entries(list)
+          : [];
+    return rows.filter(([k, v]) => k && v).map(([k, v]) => `${k}: ${v}`).join('\n');
+};
+
 function renderProducts() {
     const root = $('#productList');
     if (!data.loadedAt.products) {
@@ -417,11 +446,12 @@ function renderProducts() {
               .map(
                   (p) => `<article class="p-row" data-id="${esc(p.id)}">
                 <img src="${esc(p.image || '')}" alt="" loading="lazy" width="56" height="56" onerror="this.style.visibility='hidden'" />
-                <div class="p-title"><strong>${esc(p.title)}</strong><small>${esc(p.category || 'ক্যাটাগরি নেই')}</small></div>
+                <div class="p-title"><strong>${esc(p.title)}</strong><small>${esc(p.category || 'ক্যাটাগরি নেই')}${p.brand ? ` · ${esc(p.brand)}` : ''}</small>${sourceBadge(p)}</div>
                 <div class="p-price"><strong>${formatPrice(p.price)}</strong>${Number(p.old_price) > Number(p.price) ? `<small>${formatPrice(p.old_price)}</small>` : ''}</div>
-                <div class="p-stock">${parseOptions(p.options).length ? `<span class="stock-chip ok">${formatNumber(parseOptions(p.options).length)}টি অপশন</span>` : stockChip(p)}</div>
+                <div class="p-stock">${p.is_active === false ? '<span class="stock-chip out">লুকানো</span>' : parseOptions(p.options).length ? `<span class="stock-chip ok">${formatNumber(parseOptions(p.options).length)}টি অপশন</span>` : stockChip(p)}</div>
                 <div class="p-prio">প্রায়োরিটি ${formatNumber(p.priority || 0)}</div>
                 <div class="p-actions">
+                    ${'is_active' in p ? `<button type="button" class="icon-btn icon-btn-sm" data-action="toggle-active" data-id="${esc(p.id)}" aria-pressed="${p.is_active !== false}" aria-label="${esc(p.title)} ${p.is_active === false ? 'স্টোরফ্রন্টে দেখান' : 'স্টোরফ্রন্ট থেকে লুকান'}" title="${p.is_active === false ? 'দেখান' : 'লুকান'}">${icon(p.is_active === false ? 'eye-off' : 'eye')}</button>` : ''}
                     <button type="button" class="icon-btn icon-btn-sm" data-action="edit-product" data-id="${esc(p.id)}" aria-label="${esc(p.title)} এডিট করুন">${icon('pencil')}</button>
                     <button type="button" class="icon-btn icon-btn-sm danger" data-action="delete-product" data-id="${esc(p.id)}" aria-label="${esc(p.title)} ডিলিট করুন">${icon('trash-2')}</button>
                 </div>
@@ -540,6 +570,7 @@ function collectVariants(productPrice) {
 
 function openProductEditor(product = null) {
     ui.editingId = product ? String(product.id) : null;
+    ui.touched.clear();
     delete $('#fCategory').dataset.touched;
     $('#productDialogTitle').textContent = product ? 'পণ্য এডিট করুন' : 'নতুন পণ্য';
     $('#fTitle').value = product?.title || '';
@@ -554,11 +585,53 @@ function openProductEditor(product = null) {
     $('#categoryOptions').innerHTML = [...new Set(data.products.map((p) => p.category).filter(Boolean))]
         .map((c) => `<option value="${esc(c)}"></option>`)
         .join('');
+    const extra = hasExtraColumns();
+    $('#extraFields').hidden = !extra;
+    $('#supplierNote').hidden = !(extra && product?.is_supplier_product);
+    if (extra) {
+        $('#fBrand').value = product?.brand || '';
+        $('#fSku').value = product?.sku || '';
+        $('#fImages').value = (Array.isArray(product?.images) ? product.images : []).join('\n');
+        $('#fSpecs').value = specsToText(product?.specifications);
+        $('#fActive').checked = product ? product.is_active !== false : true;
+        ['fImages', 'fSpecs'].forEach((id) => setErr(id, ''));
+    }
     ui.hadOptions = parseOptions(product?.options).length > 0;
     renderVariantRows(parseOptions(product?.options));
     setVariantsError('');
     updateImagePreview();
     openDialog(dlg.product);
+}
+
+/** Brand / SKU / extra photos / specs / visibility. Returns null (after showing the error) when invalid. */
+function collectExtras() {
+    const images = parseLines($('#fImages').value);
+    const badImage = images.find((u) => {
+        try {
+            return !/^https?:$/.test(new URL(u).protocol);
+        } catch {
+            return true;
+        }
+    });
+    setErr('fImages', badImage ? `সঠিক লিঙ্ক নয়: ${badImage}` : '');
+    const specLines = parseLines($('#fSpecs').value);
+    const specs = specLines.map((line) => {
+        const i = line.indexOf(':');
+        return i > 0 && line.slice(i + 1).trim() ? { label: line.slice(0, i).trim(), value: line.slice(i + 1).trim() } : null;
+    });
+    const badSpec = specs.findIndex((s) => !s);
+    setErr('fSpecs', badSpec >= 0 ? `“নাম: মান” ফরম্যাটে লিখুন — ${specLines[badSpec]}` : '');
+    if (badImage || badSpec >= 0) {
+        $(badImage ? '#fImages' : '#fSpecs').focus();
+        return null;
+    }
+    return {
+        brand: $('#fBrand').value.trim() || null,
+        sku: $('#fSku').value.trim() || null,
+        images,
+        specifications: specs,
+        is_active: $('#fActive').checked
+    };
 }
 
 function validateProduct() {
@@ -596,7 +669,10 @@ function validateProduct() {
         variants.focus.focus();
         return null;
     }
+    const extra = hasExtraColumns() ? collectExtras() : {};
+    if (extra === null) return null;
     return {
+        ...extra,
         // Send `options` when there are some, or to clear previously saved ones; otherwise leave the column untouched.
         ...(variants.options.length || ui.hadOptions ? { options: variants.options } : {}),
         title, category, price, image, stock,
@@ -604,6 +680,23 @@ function validateProduct() {
         priority: Number.isInteger(priority) ? priority : 0,
         description: $('#fDesc').value.trim()
     };
+}
+
+/** Form fields → product columns, used to remember which ones a person edited by hand. */
+const FIELD_COLUMN = {
+    fTitle: 'title', fCategory: 'category', fPrice: 'price', fOldPrice: 'old_price', fImage: 'image',
+    fStock: 'stock', fDesc: 'description', fBrand: 'brand', fSku: 'sku', fImages: 'images', fSpecs: 'specifications'
+};
+
+/**
+ * For supplier-imported products, columns an admin edits by hand are recorded in `manual_overrides`,
+ * so the next supplier sync leaves them alone. (Only fields the person actually touched are recorded.)
+ */
+function withManualOverrides(payload, existing) {
+    if (!existing?.is_supplier_product || !('manual_overrides' in existing)) return payload;
+    const overrides = { ...(existing.manual_overrides && typeof existing.manual_overrides === 'object' ? existing.manual_overrides : {}) };
+    for (const id of ui.touched) overrides[FIELD_COLUMN[id] || id] = true;
+    return { ...payload, manual_overrides: overrides };
 }
 
 async function saveProduct(event) {
@@ -614,13 +707,14 @@ async function saveProduct(event) {
     btn.classList.add('is-loading');
     btn.disabled = true;
     try {
+        const existing = ui.editingId ? data.products.find((p) => String(p.id) === ui.editingId) : null;
         const query = ui.editingId
-            ? supabase.from('products').update(payload).eq('id', ui.editingId)
+            ? supabase.from('products').update(withManualOverrides(payload, existing)).eq('id', ui.editingId)
             : supabase.from('products').insert(payload);
         const { error } = await query;
         if (error) throw error;
         Toast.success(ui.editingId ? 'পণ্য আপডেট হয়েছে' : 'পণ্য যোগ হয়েছে');
-        localStorage.removeItem('sb:products:v3'); // let the storefront cache refresh on this browser too
+        ['sb:products:v3', 'sb:products:v4'].forEach((key) => localStorage.removeItem(key)); // let the storefront cache refresh on this browser too
         await closeDialog(dlg.product);
         await load('products', { force: true });
     } catch (err) {
@@ -635,6 +729,20 @@ async function saveProduct(event) {
         btn.classList.remove('is-loading');
         btn.disabled = false;
     }
+}
+
+async function toggleActive(id) {
+    const product = data.products.find((p) => String(p.id) === id);
+    if (!product) return;
+    const next = product.is_active === false; // currently hidden → show
+    const { error } = await supabase.from('products').update({ is_active: next }).eq('id', id);
+    if (error) {
+        console.error(error);
+        return Toast.error(`পরিবর্তন করা যায়নি: ${error.message}`);
+    }
+    Toast.success(next ? 'পণ্যটি স্টোরফ্রন্টে দেখানো হচ্ছে' : 'পণ্যটি স্টোরফ্রন্ট থেকে লুকানো হয়েছে');
+    ['sb:products:v3', 'sb:products:v4'].forEach((key) => localStorage.removeItem(key));
+    await load('products', { force: true });
 }
 
 async function deleteProduct(id) {
@@ -778,6 +886,7 @@ function init() {
         if (!btn) return;
         if (btn.dataset.action === 'edit-product') openProductEditor(data.products.find((p) => String(p.id) === btn.dataset.id));
         if (btn.dataset.action === 'delete-product') deleteProduct(btn.dataset.id);
+        if (btn.dataset.action === 'toggle-active') toggleActive(btn.dataset.id);
     });
     $('#productForm').addEventListener('submit', saveProduct);
     $('#addVariant').addEventListener('click', () => {
@@ -791,7 +900,14 @@ function init() {
         btn.closest('.var-row').remove();
         $$('.var-row .var-n', $('#variantList')).forEach((n, i) => (n.textContent = formatNumber(i + 1)));
     });
-    $('#variantList').addEventListener('input', () => setVariantsError(''));
+    $('#variantList').addEventListener('input', () => {
+        setVariantsError('');
+        ui.touched.add('options');
+    });
+    // Remember which fields a person edited by hand (see withManualOverrides)
+    $('#productForm').addEventListener('input', (e) => {
+        if (e.target.id in FIELD_COLUMN) ui.touched.add(e.target.id);
+    });
     $('#fImage').addEventListener('input', updateImagePreview);
     $('#fTitle').addEventListener('input', () => {
         setErr('fTitle', '');

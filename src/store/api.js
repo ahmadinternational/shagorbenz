@@ -3,8 +3,9 @@
 import { supabase } from '../lib/supabase.js';
 import { storage } from '../lib/utils.js';
 
-const CACHE_KEY = 'sb:products:v3'; // bumped: products now carry `variants`
+const CACHE_KEY = 'sb:products:v4'; // bumped: products now carry brand / sku / gallery / specs / active
 const PAGE_SIZE = 1000; // PostgREST default max rows per request
+const MAX_PRODUCTS = 20000; // safety stop for the paging loop
 
 const num = (value) => {
     const n = Number(value);
@@ -48,6 +49,38 @@ function normalizeVariants(raw) {
         .filter(Boolean);
 }
 
+const parseJson = (raw, fallback) => {
+    if (typeof raw !== 'string') return raw ?? fallback;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return fallback;
+    }
+};
+
+/** Main image first, then the extra photos — de-duplicated, empty values dropped. */
+function normalizeGallery(rawImages, mainImage) {
+    const list = parseJson(rawImages, []);
+    const urls = [mainImage, ...(Array.isArray(list) ? list.map((x) => (typeof x === 'string' ? x : x?.url)) : [])];
+    return [...new Set(urls.map((u) => String(u || '').trim()).filter(Boolean))];
+}
+
+/**
+ * Specifications as stored: [{ "label": "Battery", "value": "500 mAh" }] — or a plain { "Battery": "500 mAh" } map.
+ * Rows without a value are dropped; nothing is made up.
+ */
+function normalizeSpecs(raw) {
+    const data = parseJson(raw, []);
+    const rows = Array.isArray(data)
+        ? data.map((x) => ({ label: x?.label ?? x?.name ?? x?.key, value: x?.value }))
+        : data && typeof data === 'object'
+          ? Object.entries(data).map(([label, value]) => ({ label, value }))
+          : [];
+    return rows
+        .map((r) => ({ label: String(r.label ?? '').trim(), value: String(r.value ?? '').trim() }))
+        .filter((r) => r.label && r.value);
+}
+
 /** DB row (snake_case) → app product (camelCase, ids always strings). */
 export function mapProduct(row) {
     const basePrice = num(row.price);
@@ -74,7 +107,13 @@ export function mapProduct(row) {
         baseOldPrice,
         variants,
         category: String(row.category ?? '').trim(),
+        brand: String(row.brand ?? '').trim(),
+        sku: String(row.sku ?? '').trim(),
         image: row.image || '',
+        gallery: normalizeGallery(row.images, row.image),
+        specs: normalizeSpecs(row.specifications),
+        // Missing column or null → active. Only an explicit `false` hides a product.
+        active: row.is_active !== false,
         // null/undefined stock = "not tracked" → treated as always available.
         stock: row.stock === null || row.stock === undefined ? null : num(row.stock),
         description: row.description || '',
@@ -95,6 +134,7 @@ export const hasPriceRange = (p) => hasVariants(p) && new Set(p.variants.map((v)
 
 /** Remaining units (Infinity when not tracked). For a product with options and no option given: the total. */
 export function stockOf(p, v = null) {
+    if (!p.active) return 0; // disabled in the admin panel → can never be bought
     if (v) return v.stock === null ? Infinity : Math.max(0, v.stock);
     if (hasVariants(p)) {
         let total = 0;
@@ -112,14 +152,20 @@ export const isSoldOut = (p, v = null) => stockOf(p, v) <= 0;
 // ───────────────────────── Products ─────────────────────────
 
 async function fetchAllProducts() {
-    const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('priority', { ascending: true })
-        .order('id', { ascending: false })
-        .limit(PAGE_SIZE);
-    if (error) throw error;
-    return (data || []).map(mapProduct).filter((p) => p.id && p.title);
+    // PostgREST caps one response at ~1000 rows, so a bigger catalog is read page by page.
+    const rows = [];
+    for (let from = 0; from < MAX_PRODUCTS; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('priority', { ascending: true })
+            .order('id', { ascending: false }) // unique tiebreaker → stable pages
+            .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < PAGE_SIZE) break;
+    }
+    return rows.map(mapProduct).filter((p) => p.id && p.title && p.active);
 }
 
 function readCache() {

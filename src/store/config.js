@@ -31,8 +31,9 @@ export const CONFIG = {
     MAX_SAVED_ORDERS: 30,
     PAGE_SIZE: 24,
     SCROLL_TOP_THRESHOLD: 600,
+    // Shown when a product photo fails to load (dark glass tile with a neutral image glyph).
     FALLBACK_IMAGE: `data:image/svg+xml,${encodeURIComponent(
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' fill='#eef1f5'/><path d='M38 78l16-20 12 14 8-9 14 15H38z' fill='#c4cbd6'/><circle cx='47' cy='44' r='7' fill='#c4cbd6'/></svg>"
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><defs><radialGradient id='g' cx='50%' cy='38%' r='70%'><stop offset='0' stop-color='#1a2530'/><stop offset='1' stop-color='#0a0f14'/></radialGradient></defs><rect width='120' height='120' fill='url(#g)'/><path d='M38 78l16-20 12 14 8-9 14 15H38z' fill='#2c3a48'/><circle cx='47' cy='44' r='7' fill='#2c3a48'/></svg>"
     )}`
 };
 
@@ -46,7 +47,8 @@ export const STATUS = {
 const CATEGORY_ICON_RULES = [
     [/smart\s*watch|watch/, 'watch'],
     [/power\s*bank|battery/, 'battery-charging'],
-    [/earbud|earphone|headphone|airpod/, 'headphones'],
+    [/earbud|airpod/, 'earbuds'],
+    [/earphone|headphone|headset/, 'headphones'],
     [/phone|mobile/, 'smartphone'],
     [/laptop|notebook/, 'laptop'],
     [/tablet|ipad/, 'tablet'],
@@ -59,6 +61,18 @@ const CATEGORY_ICON_RULES = [
     [/camera/, 'camera'],
     [/tv|television|monitor/, 'tv'],
     [/game|gaming/, 'gamepad-2'],
+    [/humidifier|diffuser|defuser|aroma/, 'droplets'],
+    [/lamp|lantern/, 'lamp'],
+    [/lighter|flame/, 'flame'],
+    [/light|\bled\b|bulb/, 'lightbulb'],
+    [/clock|alarm/, 'clock'],
+    [/fan|cooler/, 'fan'],
+    [/\bcars?\b|vehicle|automotive/, 'car'],
+    [/drone/, 'plane'],
+    [/self\s*defen[cs]e|safety|security/, 'shield'],
+    [/bank|saving/, 'piggy-bank'],
+    [/banner|flag/, 'flag'],
+    [/gift|toy/, 'gift'],
     [/furniture|sofa/, 'sofa'],
     [/cloth|shirt|fashion/, 'shirt'],
     [/spice|masala|grocer|rice|food/, 'wheat']

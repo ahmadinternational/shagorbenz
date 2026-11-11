@@ -3,25 +3,41 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>SHAGORBENZ — সেরা মানের পণ্য, সেরা দামে</title>
-    <meta name="description" content="SHAGORBENZ থেকে সেরা মানের ফোন, স্মার্টওয়াচ, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও গ্যাজেট কিনুন সেরা দামে। সারা বাংলাদেশে ডেলিভারি।" />
+    <title>SHAGORBENZ — প্রিমিয়াম গ্যাজেট ও টেকনোলজি স্টোর</title>
+    <meta name="description" content="SHAGORBENZ — স্মার্ট গ্যাজেট, ইয়ারবাডস, পাওয়ার ব্যাংক, স্মার্টওয়াচ, হিউমিডিফায়ার, ল্যাম্প ও দৈনন্দিন প্রয়োজনের পণ্য সেরা দামে। সারা বাংলাদেশে ডেলিভারি।" />
     <link rel="canonical" href="https://shagorbenz.com/" />
-    <meta name="theme-color" content="#0b1220" />
-    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#050608" />
+    <meta name="color-scheme" content="dark" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SHAGORBENZ" />
-    <meta property="og:title" content="SHAGORBENZ — সেরা মানের পণ্য, সেরা দামে" />
-    <meta property="og:description" content="ফোন, স্মার্টওয়াচ, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও গ্যাজেট — সারা বাংলাদেশে ডেলিভারি।" />
+    <meta property="og:locale" content="bn_BD" />
+    <meta property="og:url" content="https://shagorbenz.com/" />
+    <meta property="og:title" content="SHAGORBENZ — প্রিমিয়াম গ্যাজেট ও টেকনোলজি স্টোর" />
+    <meta property="og:description" content="স্মার্ট গ্যাজেট, ইয়ারবাডস, পাওয়ার ব্যাংক ও আরও অনেক কিছু — সারা বাংলাদেশে ডেলিভারি।" />
     <meta property="og:image" content="https://shagorbenz.com/logo.jpeg" />
+    <meta property="og:image:alt" content="SHAGORBENZ লোগো" />
     <meta name="twitter:card" content="summary" />
 
     <link rel="icon" type="image/png" href="/logo-mark.png" />
     <link rel="apple-touch-icon" href="/logo-mark.png" />
 
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "SHAGORBENZ",
+            "url": "https://shagorbenz.com/",
+            "logo": "https://shagorbenz.com/logo-mark.png",
+            "description": "প্রিমিয়াম গ্যাজেট ও টেকনোলজি স্টোর — সারা বাংলাদেশে ডেলিভারি।"
+        }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Product photos are all served from one host -->
+    <link rel="preconnect" href="https://iili.io" crossorigin />
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HSFDQ2950J"></script>
@@ -41,7 +57,7 @@
                 await OneSignal.init({
                     appId: "9781903e-892d-4ff5-98c1-676b758627fc",
                     safari_web_id: "web.onesignal.auto.57017d41-c410-4109-8af6-455278482fbc",
-                    notifyButton: { enable: true, size: 'medium', position: 'bottom-left', offset: { bottom: '84px', left: '16px' } },
+                    notifyButton: { enable: true, size: 'medium', position: 'bottom-left', offset: { bottom: '100px', left: '16px' } },
                     welcomeNotification: { title: "SHAGORBENZ", message: "নোটিফিকেশন সাবস্ক্রাইব করার জন্য ধন্যবাদ!", url: window.location.origin }
                 });
             } catch (err) {
@@ -51,10 +67,14 @@
     </script>
 
     <link rel="stylesheet" href="/src/styles/base.css" />
+    <link rel="stylesheet" href="/src/styles/glass.css" />
     <link rel="stylesheet" href="/src/styles/store.css" />
 </head>
 <body>
     <a class="skip-link" href="#catalog">পণ্যের তালিকায় যান</a>
+
+    <!-- Atmosphere: deep black, cyan ambient light, fine grid. Purely decorative. -->
+    <div class="ambient" aria-hidden="true"><span class="ambient-glow glow-a"></span><span class="ambient-glow glow-b"></span></div>
 
     <div id="app">
         <!-- Announcement bar -->
@@ -68,58 +88,79 @@
             </div>
         </div>
 
-        <!-- Header -->
+        <!-- Floating glass header -->
         <header class="site-header" id="siteHeader">
-            <div class="container header-inner">
-                <a class="brand" href="/" aria-label="SHAGORBENZ হোম">
-                    <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" />
-                    <span class="brand-name">SHAGOR<span>BENZ</span></span>
-                </a>
+            <div class="container">
+                <div class="header-bar glass">
+                    <a class="brand" href="#home" aria-label="SHAGORBENZ হোম">
+                        <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" />
+                        <span class="brand-name">SHAGOR<span>BENZ</span></span>
+                    </a>
 
-                <form class="search" id="searchForm" role="search" autocomplete="off">
-                    <svg class="icon search-icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
-                    <input type="search" id="searchInput" placeholder="পণ্যের নাম বা ক্যাটাগরি খুঁজুন…" aria-label="পণ্য খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list" enterkeyhint="search" />
-                    <button type="button" class="search-clear" id="searchClear" aria-label="খোঁজ মুছুন" hidden>
-                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
-                    </button>
-                    <div class="search-results" id="searchResults" role="listbox" aria-label="সার্চ ফলাফল" hidden></div>
-                </form>
+                    <nav class="main-nav" aria-label="প্রধান মেনু">
+                        <a class="nav-link is-active" href="#home" data-section="home" aria-current="location">হোম</a>
+                        <a class="nav-link" href="#categories" data-section="categories">ক্যাটাগরি</a>
+                        <a class="nav-link" href="#catalog" data-section="catalog">সব পণ্য</a>
+                        <a class="nav-link" href="#contact" data-section="contact">যোগাযোগ</a>
+                    </nav>
 
-                <div class="header-actions">
-                    <button type="button" class="icon-btn hide-mobile" id="historyBtn" aria-label="আমার অর্ডার" title="আমার অর্ডার">
-                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg>
-                    </button>
-                    <button type="button" class="icon-btn hide-mobile" id="wishlistBtn" aria-label="পছন্দের তালিকা" title="পছন্দের তালিকা">
-                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-heart"></use></svg>
-                        <span class="count" id="wishlistCount" hidden>0</span>
-                    </button>
-                    <button type="button" class="cart-pill" id="cartBtn" aria-label="কার্ট দেখুন">
-                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-shopping-bag"></use></svg>
-                        <span class="cart-pill-label">কার্ট</span>
-                        <span class="count" id="cartCount" hidden>0</span>
-                    </button>
+                    <form class="search" id="searchForm" role="search" autocomplete="off">
+                        <svg class="icon search-icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
+                        <input type="search" id="searchInput" placeholder="পণ্যের নাম বা ক্যাটাগরি খুঁজুন…" aria-label="পণ্য খুঁজুন" role="combobox" aria-expanded="false" aria-controls="searchResults" aria-autocomplete="list" enterkeyhint="search" />
+                        <button type="button" class="search-clear" id="searchClear" aria-label="খোঁজ মুছুন" hidden>
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg>
+                        </button>
+                        <div class="search-results" id="searchResults" role="listbox" aria-label="সার্চ ফলাফল" hidden></div>
+                    </form>
+
+                    <div class="header-actions">
+                        <button type="button" class="icon-btn only-compact" id="searchToggle" aria-label="খুঁজুন" aria-expanded="false" aria-controls="searchForm">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-search"></use></svg>
+                        </button>
+                        <button type="button" class="icon-btn hide-mobile" id="historyBtn" aria-label="আমার অর্ডার" title="আমার অর্ডার">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg>
+                        </button>
+                        <button type="button" class="icon-btn hide-mobile" id="wishlistBtn" aria-label="পছন্দের তালিকা" title="পছন্দের তালিকা">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-heart"></use></svg>
+                            <span class="count" id="wishlistCount" hidden>0</span>
+                        </button>
+                        <button type="button" class="cart-pill" id="cartBtn" aria-label="কার্ট দেখুন">
+                            <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-shopping-bag"></use></svg>
+                            <span class="cart-pill-label">কার্ট</span>
+                            <span class="count" id="cartCount" hidden>0</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
         <main id="main">
             <!-- Hero -->
-            <section class="hero" aria-labelledby="heroTitle">
+            <section class="hero" id="home" aria-labelledby="heroTitle">
                 <div class="container hero-inner">
-                    <div class="hero-copy">
-                        <span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-zap"></use></svg> SHAGORBENZ</span>
-                        <h1 id="heroTitle">সেরা মানের পণ্য,<br /><em>সেরা দামে</em></h1>
-                        <p>পছন্দের পণ্য বেছে নিন, নাম–ঠিকানা–ফোন নম্বর দিয়ে অর্ডার করুন। বাকিটা আমাদের — আপনার দরজা পর্যন্ত পৌঁছে দেব।</p>
+                    <div class="hero-panel glass reveal">
+                        <span class="eyebrow"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-zap"></use></svg> Technology Meets Luxury</span>
+                        <h1 id="heroTitle">Upgrade<br />Your <em>World.</em></h1>
+                        <p class="hero-lead">স্মার্ট প্রযুক্তি, প্রিমিয়াম গ্যাজেট আর দৈনন্দিন প্রয়োজনের পণ্য — সবকিছু এক জায়গায়, সেরা দামে।</p>
                         <div class="hero-actions">
-                            <a class="btn btn-brand btn-lg" href="#catalog">
-                                কেনাকাটা শুরু করুন
+                            <a class="btn btn-primary btn-lg" href="#catalog">
+                                পণ্য দেখুন
                                 <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-right"></use></svg>
                             </a>
-                            <button type="button" class="btn btn-outline-light btn-lg" data-action="open-history">আমার অর্ডার দেখুন</button>
+                            <a class="btn btn-outline btn-lg" href="#categories">কালেকশন দেখুন</a>
                         </div>
+                        <dl class="hero-stats" id="heroStats" hidden>
+                            <div><dd id="statProducts">0</dd><dt>পণ্য</dt></div>
+                            <div><dd id="statCategories">0</dd><dt>ক্যাটাগরি</dt></div>
+                            <div><dd>সারা দেশে</dd><dt>ডেলিভারি</dt></div>
+                        </dl>
                     </div>
-                    <div class="hero-art" aria-hidden="true">
-                        <img src="/logo-hero.webp" alt="" width="290" height="290" fetchpriority="high" />
+
+                    <div class="hero-visual reveal" id="heroVisual">
+                        <span class="orbit orbit-1" aria-hidden="true"></span>
+                        <span class="orbit orbit-2" aria-hidden="true"></span>
+                        <img class="hero-emblem" src="/logo-hero.webp" alt="SHAGORBENZ লোগো" width="560" height="560" fetchpriority="high" decoding="async" />
+                        <div class="hero-float" id="heroFloat"></div>
                     </div>
                 </div>
             </section>
@@ -127,33 +168,51 @@
             <!-- Trust strip -->
             <section class="trust" aria-label="আমাদের সুবিধা">
                 <div class="container trust-grid">
-                    <div class="trust-item">
+                    <div class="trust-item glass reveal">
                         <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-truck"></use></svg></span>
                         <div><strong>সারা দেশে ডেলিভারি</strong><span>ঢাকার ভিতরে ও বাইরে</span></div>
                     </div>
-                    <div class="trust-item">
+                    <div class="trust-item glass reveal">
                         <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-package"></use></svg></span>
                         <div><strong>লাইভ অর্ডার ট্র্যাকিং</strong><span>নম্বর ছাড়াই, এই ব্রাউজারেই অবস্থা দেখুন</span></div>
                     </div>
-                    <div class="trust-item">
+                    <div class="trust-item glass reveal">
                         <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg></span>
                         <div><strong>সহজ অর্ডার</strong><span>অ্যাকাউন্ট ছাড়াই কেনাকাটা</span></div>
                     </div>
-                    <div class="trust-item">
+                    <div class="trust-item glass reveal">
                         <span class="trust-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-headset"></use></svg></span>
                         <div><strong>হোয়াটসঅ্যাপ সাপোর্ট</strong><span>যেকোনো প্রশ্নে সরাসরি মেসেজ</span></div>
                     </div>
                 </div>
             </section>
 
-            <!-- Catalog -->
-            <section class="catalog" id="catalog" aria-labelledby="catalogTitle" tabindex="-1">
+            <!-- Categories (built from the live catalog) -->
+            <section class="section categories" id="categories" aria-labelledby="categoriesTitle" tabindex="-1" hidden>
                 <div class="container">
-                    <div class="catalog-head">
-                        <h2 id="catalogTitle">সব পণ্য</h2>
-                    </div>
+                    <header class="section-head reveal">
+                        <div>
+                            <span class="kicker">ক্যাটাগরি</span>
+                            <h2 id="categoriesTitle">পছন্দের ক্যাটাগরি বেছে নিন</h2>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" id="categoryToggle" aria-expanded="false" aria-controls="categoryGrid" hidden></button>
+                    </header>
+                    <div class="category-grid" id="categoryGrid"></div>
+                </div>
+            </section>
 
-                    <div class="chips-wrap">
+            <!-- Catalog -->
+            <section class="section catalog" id="catalog" aria-labelledby="catalogTitle" tabindex="-1">
+                <div class="container">
+                    <header class="section-head reveal">
+                        <div>
+                            <span class="kicker">কালেকশন</span>
+                            <h2 id="catalogTitle">সব পণ্য</h2>
+                        </div>
+                        <p class="result-count" id="resultCount" aria-live="polite"></p>
+                    </header>
+
+                    <div class="chips-wrap glass">
                         <div class="chips" id="categoryChips" role="group" aria-label="ক্যাটাগরি">
                             <button type="button" class="chip is-active" data-category="all" aria-pressed="true">
                                 <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-layout-grid"></use></svg>সব পণ্য
@@ -161,76 +220,83 @@
                         </div>
                     </div>
 
-                    <div class="catalog-layout">
-                        <aside class="filters" id="filterSidebar" aria-label="ফিল্টার"></aside>
-
-                        <div class="results">
-                            <div class="toolbar">
-                                <p class="result-count" id="resultCount" aria-live="polite"></p>
-                                <div class="toolbar-actions">
-                                    <button type="button" class="btn btn-outline btn-sm filter-open" id="openFilters">
-                                        <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-sliders-horizontal"></use></svg>
-                                        ফিল্টার <span class="count count-inline" id="filterCount" hidden>0</span>
-                                    </button>
-                                    <label class="select-wrap">
-                                        <span class="sr-only">সাজান</span>
-                                        <select id="sortSelect" class="select">
-                                            <option value="default">ফিচার্ড</option>
-                                            <option value="newest">নতুন আসা</option>
-                                            <option value="price-asc">দাম: কম থেকে বেশি</option>
-                                            <option value="price-desc">দাম: বেশি থেকে কম</option>
-                                            <option value="discount">সর্বোচ্চ ছাড়</option>
-                                            <option value="name-asc">নাম: A–Z</option>
-                                        </select>
-                                    </label>
-                                </div>
+                    <div class="results">
+                        <div class="toolbar">
+                            <aside class="filters" id="filterSidebar" aria-label="ফিল্টার"></aside>
+                            <div class="toolbar-actions">
+                                <button type="button" class="btn btn-outline btn-sm filter-open" id="openFilters">
+                                    <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-sliders-horizontal"></use></svg>
+                                    ফিল্টার <span class="count count-inline" id="filterCount" hidden>0</span>
+                                </button>
+                                <label class="select-wrap">
+                                    <span class="sr-only">সাজান</span>
+                                    <select id="sortSelect" class="select">
+                                        <option value="default">ফিচার্ড</option>
+                                        <option value="newest">নতুন আসা</option>
+                                        <option value="price-asc">দাম: কম থেকে বেশি</option>
+                                        <option value="price-desc">দাম: বেশি থেকে কম</option>
+                                        <option value="discount">সর্বোচ্চ ছাড়</option>
+                                        <option value="name-asc">নাম: A–Z</option>
+                                    </select>
+                                </label>
                             </div>
-
-                            <div class="active-filters" id="activeFilters" hidden></div>
-
-                            <div class="product-grid" id="productGrid" aria-busy="true"></div>
-
-                            <div class="load-more" id="loadMoreWrap" hidden>
-                                <button type="button" class="btn btn-outline btn-lg" id="loadMoreBtn">আরও পণ্য দেখুন</button>
-                            </div>
-
-                            <section class="recent" id="recentSection" aria-labelledby="recentTitle" hidden>
-                                <h2 id="recentTitle">সম্প্রতি দেখেছেন</h2>
-                                <div class="product-grid product-grid-compact" id="recentGrid"></div>
-                            </section>
                         </div>
+
+                        <div class="active-filters" id="activeFilters" hidden></div>
+
+                        <div class="product-grid" id="productGrid" aria-busy="true"></div>
+
+                        <div class="load-more" id="loadMoreWrap" hidden>
+                            <button type="button" class="btn btn-outline btn-lg" id="loadMoreBtn">আরও পণ্য দেখুন</button>
+                        </div>
+
+                        <section class="recent" id="recentSection" aria-labelledby="recentTitle" hidden>
+                            <h2 id="recentTitle">সম্প্রতি দেখেছেন</h2>
+                            <div class="product-grid product-grid-compact" id="recentGrid"></div>
+                        </section>
                     </div>
                 </div>
             </section>
         </main>
 
-        <footer class="site-footer">
-            <div class="container footer-grid">
-                <div class="footer-brand">
-                    <a class="brand brand-light" href="/" aria-label="SHAGORBENZ">
-                        <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" loading="lazy" />
-                        <span class="brand-name">SHAGOR<span>BENZ</span></span>
-                    </a>
-                    <p>বিশ্বস্ত পণ্য, সঠিক দাম আর সহজ অর্ডার — সারা বাংলাদেশে।</p>
+        <footer class="site-footer" id="contact">
+            <div class="container">
+                <div class="footer-card glass">
+                    <div class="footer-grid">
+                        <div class="footer-brand">
+                            <a class="brand" href="#home" aria-label="SHAGORBENZ">
+                                <img src="/logo-mark.png" alt="" class="brand-mark" width="40" height="40" loading="lazy" />
+                                <span class="brand-name">SHAGOR<span>BENZ</span></span>
+                            </a>
+                            <p>বিশ্বস্ত পণ্য, সঠিক দাম আর সহজ অর্ডার — সারা বাংলাদেশে।</p>
+                            <p class="footer-tagline">Technology Meets Luxury.</p>
+                        </div>
+                        <nav aria-label="দ্রুত লিংক">
+                            <h3>দ্রুত লিংক</h3>
+                            <ul>
+                                <li><a href="#home">হোম</a></li>
+                                <li><a href="#categories">ক্যাটাগরি</a></li>
+                                <li><a href="#catalog">সব পণ্য</a></li>
+                                <li><button type="button" class="link-btn" data-action="open-history">আমার অর্ডার দেখুন</button></li>
+                                <li><button type="button" class="link-btn" data-action="open-wishlist">পছন্দের তালিকা</button></li>
+                            </ul>
+                        </nav>
+                        <nav aria-label="পণ্যের ক্যাটাগরি" id="footerCategoriesWrap" hidden>
+                            <h3>ক্যাটাগরি</h3>
+                            <ul id="footerCategories"></ul>
+                        </nav>
+                        <div>
+                            <h3>যোগাযোগ</h3>
+                            <ul>
+                                <li><a href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer">হোয়াটসঅ্যাপ: ০১৮৫১-১৪৯২৩০</a></li>
+                                <li id="footerDelivery"></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="footer-bottom">
+                        <p>© <span id="year">2026</span> SHAGORBENZ. সর্বস্বত্ব সংরক্ষিত।</p>
+                    </div>
                 </div>
-                <div>
-                    <h3>দ্রুত লিংক</h3>
-                    <ul>
-                        <li><a href="#catalog">সব পণ্য</a></li>
-                        <li><button type="button" class="link-btn" data-action="open-history">আমার অর্ডার দেখুন</button></li>
-                        <li><button type="button" class="link-btn" data-action="open-wishlist">পছন্দের তালিকা</button></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3>যোগাযোগ</h3>
-                    <ul>
-                        <li><a href="https://wa.me/8801851149230" target="_blank" rel="noopener noreferrer">হোয়াটসঅ্যাপ: ০১৮৫১-১৪৯২৩০</a></li>
-                        <li id="footerDelivery"></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="container footer-bottom">
-                <p>© <span id="year">2026</span> SHAGORBENZ. সর্বস্বত্ব সংরক্ষিত।</p>
             </div>
         </footer>
     </div>
@@ -245,7 +311,7 @@
         <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-arrow-up"></use></svg>
     </button>
 
-    <!-- Mobile bottom navigation -->
+    <!-- Mobile bottom dock -->
     <nav class="mobile-nav" aria-label="মোবাইল নেভিগেশন">
         <button type="button" class="nav-item" data-action="nav-home">
             <svg class="icon" aria-hidden="true"><use href="/icons.svg#i-house"></use></svg><span>হোম</span>
@@ -371,6 +437,7 @@
                 </div>
                 <footer class="panel-foot">
                     <dl class="summary" id="checkoutSummary"></dl>
+                    <p class="form-alert" id="orderAlert" role="alert" hidden></p>
                     <button type="submit" class="btn btn-primary btn-lg btn-block" id="placeOrderBtn">
                         <span class="btn-label">অর্ডার নিশ্চিত করুন</span>
                         <span class="spinner" aria-hidden="true"></span>
@@ -381,7 +448,7 @@
         </div>
     </dialog>
 
-    <!-- Filters (mobile sheet) -->
+    <!-- Filters (sheet on tablet / phone) -->
     <dialog id="filterDialog" class="overlay overlay-sheet" aria-labelledby="filterTitle">
         <div class="panel panel-sheet">
             <header class="panel-head">

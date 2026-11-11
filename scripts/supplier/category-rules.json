@@ -1,0 +1,93 @@
+{
+  "_note": "Badhon's World publishes no category for its products. These SHAGORBENZ categories are assigned from keywords in the TITLE (first matching rule wins, case-insensitive). Edit freely; unmatched products go to 'Other'. The supplier category stays empty — it is never guessed.",
+  "rules": [
+    {
+      "category": "Power Bank",
+      "match": "power ?bank"
+    },
+    {
+      "category": "Humidifier",
+      "match": "humidifier"
+    },
+    {
+      "category": "Lamp",
+      "match": "lamp|night light"
+    },
+    {
+      "category": "Bank",
+      "match": "money bank|coin bank|saving|piggy"
+    },
+    {
+      "category": "Earbuds",
+      "match": "earbud|airpod|\\btws\\b"
+    },
+    {
+      "category": "Headphones",
+      "match": "headset|headphone"
+    },
+    {
+      "category": "Speaker",
+      "match": "speaker"
+    },
+    {
+      "category": "Fan",
+      "match": "\\bfan\\b"
+    },
+    {
+      "category": "Drone",
+      "match": "drone"
+    },
+    {
+      "category": "RC Car",
+      "match": "\\brc\\b|drift"
+    },
+    {
+      "category": "Toy Car",
+      "match": "hot wheels|die-cast|model motorcycle|speed motorcycle"
+    },
+    {
+      "category": "Mystery Box",
+      "match": "mystery|blind box"
+    },
+    {
+      "category": "Pen Holder",
+      "match": "pen holder|desk organizer"
+    },
+    {
+      "category": "Figures & Collectibles",
+      "match": "figure|chibi|bobblehead|collectible|trading card"
+    },
+    {
+      "category": "Football Collectibles",
+      "match": "football|trophy|medal|keyring|key ring|keychain|goalkeeper|banner|champion"
+    },
+    {
+      "category": "Camera",
+      "match": "camera"
+    },
+    {
+      "category": "Backpack",
+      "match": "backpack"
+    },
+    {
+      "category": "Food",
+      "match": "honey|nuts"
+    },
+    {
+      "category": "Personal Care",
+      "match": "massager"
+    },
+    {
+      "category": "Phone Accessories",
+      "match": "selfie|charging protector|disconnector"
+    },
+    {
+      "category": "Gifts",
+      "match": "gift|music box"
+    },
+    {
+      "category": "Toys & Games",
+      "match": "toy|game|\\bgun\\b|\\bmask\\b"
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+/* ============================================================
+   glass.css — SHAGORBENZ storefront theme: "Technology Meets Luxury"
+   Dark glassmorphism on top of base.css.
+
+   Loaded only by the storefront (index.html), AFTER base.css. It re-points the
+   design tokens base.css defines and restyles the shared components (buttons,
+   forms, overlays, toasts, skeletons) for a dark surface. The admin panel loads
+   base.css alone, so it keeps its light look untouched.
+
+   Palette
+     #050608 deep black · #090D12 secondary · cyan #00E5FF → #00A8FF accent
+     glass = white at 4.5 % + 10 % hairline border · text #F5FAFF / #9BA9B8
+   ============================================================ */
+
+:root {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --bg: #050608;
+    --bg-2: #090d12;
+    --surface: #0b1117; /* solid — popovers & sticky bars that must stay readable */
+    --surface-2: rgba(255, 255, 255, 0.05);
+    --media-bg: #0a0f14;
+
+    /* Glass */
+    --glass: rgba(255, 255, 255, 0.045);
+    --glass-2: rgba(255, 255, 255, 0.075);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-hi: rgba(0, 229, 255, 0.4);
+    --glass-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.02) 52%);
+    --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.15);
+
+    /* Brand */
+    --ink: #031318; /* text that sits ON a cyan fill */
+    --brand: #00e5ff;
+    --brand-2: #00a8ff;
+    --brand-500: #00e5ff;
+    --brand-600: #19d3ec;
+    --brand-700: #5cecff; /* cyan used as TEXT on dark */
+    --brand-100: rgba(0, 229, 255, 0.2);
+    --brand-50: rgba(0, 229, 255, 0.09);
+    --grad: linear-gradient(135deg, #00e5ff 0%, #00a8ff 100%);
+    --grad-text: linear-gradient(100deg, #b4f7ff 0%, #00e5ff 42%, #00a8ff 100%);
+
+    /* Text — secondary/muted lifted slightly from the brief so small text clears WCAG AA on #050608 */
+    --text: #f5faff;
+    --text-2: #9ba9b8;
+    --text-3: #7d8b9c;
+
+    /* Status (tuned for dark) */
+    --danger: #ff6b7d;
+    --danger-50: rgba(255, 90, 112, 0.13);
+    --success: #35e8a2;
+    --success-50: rgba(53, 232, 162, 0.12);
+    --warn: #ffb454;
+    --warn-50: rgba(255, 180, 84, 0.13);
+    --info: #5cecff;
+    --info-50: rgba(0, 229, 255, 0.1);
+    --star: #ffc857;
+    --whatsapp: #1fb862;
+
+    /* Shape & depth */
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-xl: 28px;
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 16px 36px -12px rgba(0, 0, 0, 0.7);
+    --shadow-lg: 0 32px 80px -16px rgba(0, 0, 0, 0.85);
+    --glow: 0 0 0 1px rgba(0, 229, 255, 0.16), 0 22px 54px -20px rgba(0, 229, 255, 0.38);
+    --ring: 0 0 0 3px rgba(0, 229, 255, 0.2);
+
+    /* Layout */
+    --container: 1400px;
+    --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+    --font: 'Inter', 'Noto Sans Bengali', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Sora', 'Inter', 'Noto Sans Bengali', system-ui, sans-serif;
+}
+
+@media (max-width: 767px) {
+    :root {
+        --nav-h: 86px; /* floating dock (64px) + its margin */
+    }
+}
+
+/* ---------- Page ---------- */
+html {
+    background: var(--bg);
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+body {
+    background: transparent;
+    color: var(--text);
+}
+::selection {
+    background: rgba(0, 229, 255, 0.3);
+    color: #fff;
+}
+a {
+    color: var(--brand-700);
+}
+:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+}
+.muted {
+    color: var(--text-3);
+}
+.skip-link {
+    background: var(--brand);
+    color: var(--ink);
+}
+abbr[title] {
+    color: var(--danger);
+}
+.icon.is-empty {
+    color: rgba(255, 255, 255, 0.16);
+}
+
+/* Native form popups and scrollbars follow the dark scheme */
+select option {
+    background: #0b1117;
+    color: var(--text);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+/* ---------- Glass surface (reusable) ---------- */
+.glass {
+    position: relative;
+    background: var(--glass-sheen), rgba(10, 15, 20, 0.5);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-edge), var(--shadow-md);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    border-radius: 999px;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.25s, transform 0.15s var(--ease),
+        filter 0.2s;
+}
+.btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+.btn-sm {
+    border-radius: 999px;
+}
+.btn-primary,
+.btn-brand {
+    background: var(--grad);
+    color: var(--ink);
+    font-weight: 700;
+    box-shadow: 0 8px 24px -10px rgba(0, 229, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:hover:not(:disabled),
+.btn-brand:hover:not(:disabled) {
+    background: var(--grad);
+    filter: brightness(1.08);
+    box-shadow: 0 14px 34px -10px rgba(0, 229, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-3);
+    box-shadow: none;
+    opacity: 1;
+}
+.btn-outline,
+.btn-outline-light {
+    background: var(--glass);
+    border-color: var(--line-2);
+    color: var(--text);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+.btn-outline:hover:not(:disabled),
+.btn-outline-light:hover:not(:disabled) {
+    background: rgba(0, 229, 255, 0.08);
+    border-color: var(--glass-border-hi);
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.1), 0 10px 30px -14px rgba(0, 229, 255, 0.5);
+}
+.btn-whatsapp {
+    background: linear-gradient(135deg, #22c55e, #15803d);
+    color: #fff;
+}
+.btn-whatsapp:hover {
+    filter: brightness(1.08);
+}
+.btn-danger {
+    background: var(--danger-50);
+    color: var(--danger);
+    border-color: rgba(255, 107, 125, 0.3);
+}
+.btn-danger:hover:not(:disabled) {
+    background: var(--danger);
+    color: #1a0509;
+}
+.spinner {
+    border-color: rgba(3, 19, 24, 0.25);
+    border-top-color: var(--ink);
+}
+
+.icon-btn {
+    color: var(--text-2);
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.15s var(--ease);
+}
+.icon-btn:hover {
+    background: var(--glass-2);
+    color: var(--text);
+}
+.icon-btn:active {
+    transform: scale(0.92);
+}
+
+.link-btn {
+    color: var(--brand-700);
+}
+
+/* Count badge: only rendered when > 0 (the `hidden` attribute is toggled in JS) */
+.count {
+    background: var(--grad);
+    color: var(--ink);
+    box-shadow: 0 0 0 2px var(--bg-2), 0 0 14px rgba(0, 229, 255, 0.55);
+}
+
+/* ---------- Forms ---------- */
+.field label,
+.field-group legend {
+    color: var(--text-2);
+    font-weight: 600;
+}
+.field input,
+.field select,
+.field textarea,
+.input,
+.select {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-md);
+    color: var(--text);
+}
+.field input::placeholder,
+.field textarea::placeholder,
+.input::placeholder {
+    color: var(--text-3);
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover,
+.select:hover {
+    border-color: var(--line-2);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.input:focus,
+.select:focus {
+    background: rgba(0, 229, 255, 0.04);
+    border-color: var(--brand);
+    box-shadow: var(--ring);
+}
+.field.has-error input,
+.field.has-error textarea,
+.field.has-error select {
+    border-color: var(--danger);
+}
+.field.has-error input:focus,
+.field.has-error textarea:focus {
+    box-shadow: 0 0 0 3px rgba(255, 107, 125, 0.2);
+}
+.select {
+    /* the `background` shorthand above reset base.css's no-repeat/position, so they are restated here */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%239ba9b8' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 12px 8px;
+}
+.check {
+    color: var(--text-2);
+}
+/* Dark-glass checkbox: native control replaced so it matches the rest of the UI */
+.check input[type='checkbox'] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--line-2);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.check input[type='checkbox']:hover {
+    border-color: var(--brand);
+}
+.check input[type='checkbox']:checked {
+    background: var(--grad);
+    border-color: transparent;
+    box-shadow: 0 0 14px -2px rgba(0, 229, 255, 0.6);
+}
+.check input[type='checkbox']:checked::before {
+    content: '';
+    width: 10px;
+    height: 6px;
+    margin-top: -2px;
+    border-left: 2.5px solid var(--ink);
+    border-bottom: 2.5px solid var(--ink);
+    transform: rotate(-45deg);
+}
+.check input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+/* Chrome paints autofilled fields white — keep them dark */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text);
+    caret-color: var(--text);
+    box-shadow: 0 0 0 100px #0d151c inset;
+    transition: background-color 9999s ease-out 0s;
+}
+
+/* ---------- Overlays (<dialog>) ---------- */
+dialog.overlay::backdrop {
+    background: radial-gradient(900px 500px at 70% 10%, rgba(0, 168, 255, 0.1), transparent 70%), rgba(2, 4, 6, 0.66);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.panel {
+    background: linear-gradient(155deg, rgba(24, 34, 46, 0.78), rgba(8, 12, 17, 0.9) 60%);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-edge), var(--shadow-lg), 0 0 80px -30px rgba(0, 229, 255, 0.25);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6);
+    backdrop-filter: blur(32px) saturate(1.6);
+}
+.panel-head {
+    border-bottom-color: var(--line);
+}
+.panel-foot {
+    background: rgba(6, 9, 13, 0.72);
+    border-top-color: var(--line);
+    box-shadow: 0 -16px 32px -20px rgba(0, 0, 0, 0.9);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+}
+.panel-close {
+    background: rgba(8, 12, 17, 0.7);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+}
+.overlay-right .panel {
+    border-radius: var(--r-xl) 0 0 var(--r-xl);
+    border-right: 0;
+}
+/* base.css's `dialog.overlay { padding: 0 }` out-ranks `.overlay-center { padding: 24px }`; restore the margin on desktop */
+@media (min-width: 641px) {
+    dialog.overlay-center {
+        padding: 24px;
+    }
+}
+@media (max-width: 640px) {
+    .overlay-right .panel {
+        border-radius: 0;
+        border-left: 0;
+    }
+    .overlay-center .panel,
+    .overlay-sheet .panel {
+        border-bottom: 0;
+    }
+}
+
+/* ---------- Toasts ---------- */
+.toast {
+    background: rgba(12, 18, 25, 0.88);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    box-shadow: var(--glass-edge), var(--shadow-lg);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+}
+.toast-error {
+    border-color: rgba(255, 107, 125, 0.4);
+}
+.toast-error .icon {
+    color: var(--danger);
+}
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 25%,
+        rgba(255, 255, 255, 0.1) 37%,
+        rgba(255, 255, 255, 0.04) 63%
+    );
+    background-size: 400% 100%;
+}

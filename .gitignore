@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supplier importer: secrets and local run state must never be committed
+.env
+.env.*
+!.env.example
+!.env.supplier.example
+.supplier-state/
+supplier-feeds/

@@ -953,3 +953,37 @@ body.admin {
         grid-template-columns: 1fr;
     }
 }
+
+/* ---------- Product source badge & extra storefront fields ---------- */
+.src-badge {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 1px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line-2);
+    background: var(--surface-2);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--text-2);
+}
+.src-badge.is-supplier {
+    border-color: #f5c26b;
+    background: var(--warn-50);
+    color: var(--warn);
+}
+.extra-fields {
+    border: 1px dashed var(--line-2);
+    border-radius: var(--r-md);
+    padding: 14px 16px 16px;
+    margin-top: 20px;
+}
+.extra-fields legend {
+    padding: 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.extra-fields .field.first,
+.extra-fields > .field:first-of-type {
+    margin-top: 12px;
+}
