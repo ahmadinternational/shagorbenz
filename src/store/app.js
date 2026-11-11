@@ -19,18 +19,22 @@ const state = {
     wishlist: [], // product ids
     recent: [], // product ids
     orders: [], // orders placed from this browser (same shape as DB rows)
-    filters: { category: 'all', min: '', max: '', discount: false, stock: false, sort: 'default', query: '' },
+    filters: { category: 'all', brand: 'all', min: '', max: '', discount: false, stock: false, sort: 'default', query: '' },
+    categoriesExpanded: false,
     visible: CONFIG.PAGE_SIZE,
     coupon: null,
     deliveryId: CONFIG.DELIVERY[0].id,
     step: 'cart',
     detailId: null,
     detailVariantId: null,
+    detailQty: 1, // quantity picked before the product is in the cart
+    detailImage: 0, // gallery index
     placing: false
 };
 
 const el = {};
 const dlg = {};
+const baseTitle = document.title;
 
 // ───────────────────────── Helpers ─────────────────────────
 
@@ -64,7 +68,7 @@ function restoreFocus(snapshot) {
     const id = CSS.escape(snapshot.id);
     const sel = (action) =>
         `[data-action="${action}"][data-key="${id}"]:not(:disabled), [data-action="${action}"][data-id="${id}"]:not(:disabled)`;
-    for (const action of [snapshot.action, 'increase-qty', 'add-to-cart', 'decrease-qty']) {
+    for (const action of [snapshot.action, 'increase-qty', 'add-to-cart', 'decrease-qty', 'detail-qty-dec']) {
         const target = snapshot.scope.querySelector(sel(action));
         if (target) {
             target.focus({ preventScroll: true });
@@ -315,13 +319,14 @@ function searchProducts(query) {
         .map((p) => {
             const title = p.title.toLowerCase();
             const category = p.category.toLowerCase();
-            const haystack = `${title} ${category} ${p.description.toLowerCase()}`;
+            const brand = p.brand.toLowerCase();
+            const haystack = `${title} ${category} ${brand} ${p.sku.toLowerCase()} ${p.description.toLowerCase()}`;
             if (!tokens.every((t) => haystack.includes(t))) return null;
             let score = 0;
             if (title.startsWith(full)) score += 4;
             else if (title.includes(full)) score += 3;
             if (tokens.every((t) => title.includes(t))) score += 2;
-            if (category.includes(full)) score += 1;
+            if (category.includes(full) || brand.includes(full)) score += 1;
             return { p, score };
         })
         .filter(Boolean)
@@ -344,6 +349,7 @@ function getFiltered() {
     let list = state.products.filter((p) => {
         if (relevance && !relevance.has(p.id)) return false;
         if (f.category !== 'all' && p.category.toLowerCase() !== f.category) return false;
+        if (f.brand !== 'all' && p.brand.toLowerCase() !== f.brand) return false;
         if (min !== null && p.price < min) return false;
         if (max !== null && p.price > max) return false;
         if (f.discount && !T.discountPercent(p)) return false;
@@ -387,14 +393,61 @@ function categoryMap() {
     return map;
 }
 
+/** Real brand names found in the catalog (empty when no product has a brand → no brand filter is shown). */
+function brandList() {
+    const map = new Map();
+    for (const p of state.products) {
+        if (!p.brand) continue;
+        const key = p.brand.toLowerCase();
+        const entry = map.get(key) || { key, label: p.brand, count: 0 };
+        entry.count += 1;
+        map.set(key, entry);
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+/** A real photo for a category tile: the first in-stock product of that category that has one. */
+function categoryImage(key) {
+    const inCat = state.products.filter((p) => p.category.toLowerCase() === key && p.image);
+    return (inCat.find((p) => !api.isSoldOut(p)) || inCat[0])?.image || '';
+}
+
+const CATEGORY_PREVIEW = 6;
+
 function renderCategories() {
     const map = categoryMap();
     if (state.filters.category !== 'all' && !map.has(state.filters.category)) state.filters.category = 'all';
     const sorted = [...map.entries()].sort((a, b) => b[1].count - a[1].count || a[1].label.localeCompare(b[1].label));
+
+    // Sticky chip row inside the catalog
     el.categoryChips.innerHTML =
         T.categoryChip('all', 'সব পণ্য', state.products.length, state.filters.category === 'all') +
         sorted.map(([key, v]) => T.categoryChip(key, v.label, v.count, state.filters.category === key)).join('');
     el.categoryChips.closest('.chips-wrap').hidden = map.size < 2;
+
+    // Showcase tiles: top categories first, the rest behind a toggle
+    el.categorySection.hidden = map.size < 2;
+    const shown = state.categoriesExpanded ? sorted : sorted.slice(0, CATEGORY_PREVIEW);
+    el.categoryGrid.innerHTML = shown
+        .map(([key, v]) => T.categoryCard(key, v.label, v.count, categoryImage(key), state.filters.category === key))
+        .join('');
+    const extra = sorted.length - CATEGORY_PREVIEW;
+    el.categoryToggle.hidden = extra <= 0;
+    el.categoryToggle.setAttribute('aria-expanded', state.categoriesExpanded);
+    el.categoryToggle.textContent = state.categoriesExpanded ? 'কম দেখুন' : `সব ক্যাটাগরি দেখুন (${formatNumber(sorted.length)})`;
+
+    // Footer list
+    el.footerCategoriesWrap.hidden = !sorted.length;
+    el.footerCategories.innerHTML = sorted.slice(0, 6).map(([key, v]) => T.footerCategoryLink(key, v.label)).join('');
+}
+
+/** Hero numbers and floating product chips — all read from the live catalog. */
+function renderHero() {
+    const inStock = state.products.filter((p) => p.image && !api.isSoldOut(p));
+    el.heroStats.hidden = !state.products.length;
+    el.statProducts.textContent = formatNumber(state.products.length);
+    el.statCategories.textContent = formatNumber(categoryMap().size);
+    el.heroFloat.innerHTML = inStock.slice(0, 3).map(T.heroFloatCard).join('');
 }
 
 function priceBounds() {
@@ -405,7 +458,8 @@ function priceBounds() {
 
 function renderFilterPanels() {
     const f = state.filters;
-    const html = (showHead) => T.filterPanel({ ...f, priceBounds: priceBounds(), showHead });
+    const brands = brandList();
+    const html = (showHead) => T.filterPanel({ ...f, brands, priceBounds: priceBounds(), showHead });
     el.filterSidebar.innerHTML = html(true);
     el.filterSheetBody.innerHTML = html(false);
 }
@@ -424,6 +478,7 @@ function activeFilterPills() {
     const pills = [];
     if (f.query) pills.push(['query', `“${f.query}”`]);
     if (f.category !== 'all') pills.push(['category', categoryMap().get(f.category)?.label || f.category]);
+    if (f.brand !== 'all') pills.push(['brand', brandList().find((b) => b.key === f.brand)?.label || f.brand]);
     if (f.min || f.max) pills.push(['price', `${f.min ? formatNumber(parsePrice(f.min)) : '০'} – ${f.max ? formatNumber(parsePrice(f.max)) : 'যেকোনো'} ৳`]);
     if (f.discount) pills.push(['discount', 'ছাড়ের পণ্য']);
     if (f.stock) pills.push(['stock', 'স্টকে আছে']);
@@ -438,7 +493,7 @@ function renderActiveFilters() {
               .map(([key, label]) => `<button type="button" class="pill" data-action="clear-filter" data-key="${key}">${T.pillLabel(label)}</button>`)
               .join('') + `<button type="button" class="link-btn" data-action="reset-filters">সব মুছুন</button>`
         : '';
-    const panelCount = pills.filter(([k]) => ['price', 'discount', 'stock'].includes(k)).length;
+    const panelCount = pills.filter(([k]) => ['price', 'brand', 'discount', 'stock'].includes(k)).length;
     setBadge(el.filterCount, panelCount);
 }
 
@@ -489,6 +544,7 @@ function applyProducts(list) {
     Cart.reconcile();
     renderCategories();
     renderFilterPanels();
+    renderHero();
     renderProducts({ keepVisible: true });
     Recent.render();
     updateCartUI();
@@ -534,7 +590,7 @@ function refreshDetailActions() {
     const p = getProduct(state.detailId);
     if (!p) return;
     const v = api.variantOf(p, state.detailVariantId);
-    box.innerHTML = T.detailActions(p, v, cartQty(api.lineKey(p.id, v?.id)), isWished(p.id));
+    box.innerHTML = T.detailActions(p, v, cartQty(api.lineKey(p.id, v?.id)), isWished(p.id), state.detailQty);
 }
 
 function updateCartUI() {
@@ -595,8 +651,9 @@ function renderCart() {
         subtotal: t.subtotal,
         discount: t.discount,
         couponCode: c?.code,
-        total: t.subtotal - t.discount,
-        totalLabel: 'সাবটোটাল'
+        delivery: t.delivery,
+        deliveryLabel: zone().label,
+        total: t.total
     });
     // Checkout footer stays compact (total + button); the full breakdown lives in the scrollable body.
     el.checkoutSummary.innerHTML = T.summaryRows({ subtotal: 0, total: t.total, totalOnly: true });
@@ -618,9 +675,16 @@ function setStep(step) {
         li.classList.toggle('is-done', step === 'checkout' && li.dataset.stepInd === 'cart');
         li.toggleAttribute('aria-current', active);
     });
+    showOrderAlert('');
     el.cartBack.hidden = step !== 'checkout';
     el.cartTitle.textContent = step === 'checkout' ? 'অর্ডারের তথ্য' : 'আপনার কার্ট';
     $$('.panel-body', dlg.cart).forEach((b) => (b.scrollTop = 0));
+}
+
+/** Persistent, screen-reader-announced error line above the confirm button (toasts vanish; this stays until the next try). */
+function showOrderAlert(message) {
+    el.orderAlert.textContent = message || '';
+    el.orderAlert.hidden = !message;
 }
 
 function goToCheckout() {
@@ -761,6 +825,7 @@ async function placeOrder(event) {
     const data = validateCheckout();
     if (!data) return;
 
+    showOrderAlert('');
     state.placing = true;
     el.placeOrderBtn.classList.add('is-loading');
     el.placeOrderBtn.disabled = true;
@@ -770,9 +835,11 @@ async function placeOrder(event) {
         if (!verdict.ok) {
             if (verdict.blocking.length) {
                 Toast.error(verdict.blocking[0]);
+                showOrderAlert(`${verdict.blocking[0]} — কার্ট আপডেট করা হয়েছে, আবার দেখে নিশ্চিত করুন।`);
                 if (!state.cart.length) setStep('cart');
             } else {
                 Toast.info('কিছু পণ্যের দাম বদলেছে — নতুন মোট মূল্য দেখে আবার নিশ্চিত করুন');
+                showOrderAlert('কিছু পণ্যের দাম বদলেছে। নতুন মোট মূল্য দেখে আবার নিশ্চিত করুন।');
             }
             return;
         }
@@ -834,6 +901,7 @@ async function placeOrder(event) {
     } catch (err) {
         console.error('Order failed:', err);
         Toast.error('অর্ডার সম্পন্ন করা যায়নি। ইন্টারনেট পরীক্ষা করে আবার চেষ্টা করুন।');
+        showOrderAlert('অর্ডারটি জমা হয়নি — কোনো অর্ডার তৈরি হয়নি। ইন্টারনেট পরীক্ষা করে আবার চেষ্টা করুন, অথবা হোয়াটসঅ্যাপে জানান।');
     } finally {
         state.placing = false;
         el.placeOrderBtn.classList.remove('is-loading');
@@ -850,7 +918,9 @@ const detailContext = (p) => {
         qty: cartQty(api.lineKey(p.id, v?.id)),
         wished: isWished(p.id),
         stat: state.stats.get(p.id),
-        deliveryNote: `ডেলিভারি চার্জ: ${deliverySentence()}`
+        deliveryNote: `ডেলিভারি চার্জ: ${deliverySentence()}`,
+        pending: state.detailQty,
+        imageIndex: state.detailImage
     };
 };
 
@@ -860,12 +930,16 @@ function openDetail(id, variantId = null) {
     state.detailId = p.id;
     // One option → preselect it; several → the customer must choose.
     state.detailVariantId = variantId || (p.variants.length === 1 ? p.variants[0].id : null);
+    state.detailQty = 1;
+    state.detailImage = 0;
     el.detailContent.innerHTML = T.productDetail(p, detailContext(p));
     dlg.detail.setAttribute('aria-label', p.title);
+    document.title = `${p.title} — SHAGORBENZ`; // the open product is named in the tab / history entry
     openDialog(dlg.detail, {
         onClose: () => {
             state.detailId = null;
             state.detailVariantId = null;
+            document.title = baseTitle;
         }
     });
     el.detailContent.scrollTop = 0;
@@ -878,8 +952,32 @@ function selectVariant(variantId) {
     const p = getProduct(state.detailId);
     if (!p || !api.variantOf(p, variantId)) return;
     state.detailVariantId = variantId;
+    state.detailQty = 1;
     $('#detailMain').innerHTML = T.detailMain(p, detailContext(p));
     $(`#optionPicker [data-variant="${CSS.escape(variantId)}"]`)?.focus({ preventScroll: true });
+}
+
+function setDetailQty(next) {
+    const p = getProduct(state.detailId);
+    if (!p) return;
+    const max = Math.max(1, Math.min(api.stockOf(p, api.variantOf(p, state.detailVariantId)), 99));
+    state.detailQty = Math.min(Math.max(1, next), max);
+    const focus = captureFocus();
+    refreshDetailActions();
+    restoreFocus(focus);
+}
+
+function selectImage(index) {
+    const p = getProduct(state.detailId);
+    const src = p?.gallery[index];
+    if (!src) return;
+    state.detailImage = index;
+    const main = $('#detailImg');
+    if (main) main.src = src;
+    $$('#detailMain .thumb').forEach((thumb, i) => {
+        thumb.classList.toggle('is-active', i === index);
+        thumb.setAttribute('aria-pressed', i === index);
+    });
 }
 
 async function loadReviews(id) {
@@ -1052,7 +1150,7 @@ const Search = {
 // ───────────────────────── Filters ─────────────────────────
 
 function resetFilters() {
-    Object.assign(state.filters, { category: 'all', min: '', max: '', discount: false, stock: false, query: '' });
+    Object.assign(state.filters, { category: 'all', brand: 'all', min: '', max: '', discount: false, stock: false, query: '' });
     Search.reset();
     renderCategories();
     syncFilterInputs();
@@ -1066,6 +1164,7 @@ function clearFilter(key) {
         Search.reset();
     }
     if (key === 'category') f.category = 'all';
+    if (key === 'brand') f.brand = 'all';
     if (key === 'price') Object.assign(f, { min: '', max: '' });
     if (key === 'discount') f.discount = false;
     if (key === 'stock') f.stock = false;
@@ -1080,7 +1179,21 @@ const scrollToCatalog = () => $('#catalog').scrollIntoView({ behavior: 'smooth',
 
 const ACTIONS = {
     'open-product': (id) => openDetail(id),
-    'add-to-cart': (id, target) => Cart.add(id, { variantId: target.dataset.variant || null }),
+    'add-to-cart': (id, target) => {
+        const fromDetail = !!target.closest('#detailActions');
+        const added = Cart.add(id, { variantId: target.dataset.variant || null, qty: fromDetail ? state.detailQty : 1 });
+        if (added && fromDetail) state.detailQty = 1;
+    },
+    'detail-qty-inc': () => setDetailQty(state.detailQty + 1),
+    'detail-qty-dec': () => setDetailQty(state.detailQty - 1),
+    'select-image': (_id, target) => selectImage(Number(target.dataset.index)),
+    'filter-category': (key, target) => {
+        const same = target.classList.contains('cat-card') && state.filters.category === key;
+        state.filters.category = same ? 'all' : key;
+        renderCategories();
+        renderProducts();
+        scrollToCatalog();
+    },
     'increase-qty': (_id, target) => Cart.changeQty(target.dataset.key, 1),
     'decrease-qty': (_id, target) => Cart.changeQty(target.dataset.key, -1),
     'cart-remove': (_id, target) => Cart.remove(target.dataset.key),
@@ -1106,7 +1219,8 @@ const ACTIONS = {
     },
     'buy-now': async (id, target) => {
         const variantId = target.dataset.variant || null;
-        if (!cartQty(api.lineKey(id, variantId)) && !Cart.add(id, { variantId })) return;
+        if (!cartQty(api.lineKey(id, variantId)) && !Cart.add(id, { variantId, qty: state.detailQty })) return;
+        state.detailQty = 1;
         await closeDialog(dlg.detail);
         openCart({ step: 'checkout' });
     },
@@ -1135,10 +1249,7 @@ const ACTIONS = {
     'search-all': () => Search.applyAsFilter(),
     'retry-load': () => loadCatalog(),
     'nav-home': () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-    'nav-categories': () => {
-        const chips = el.categoryChips.closest('.chips-wrap');
-        (chips.hidden ? $('#catalog') : chips).scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    'nav-categories': () => (el.categorySection.hidden ? $('#catalog') : el.categorySection).scrollIntoView({ behavior: 'smooth', block: 'start' })
 };
 
 function bindEvents() {
@@ -1173,7 +1284,7 @@ function bindEvents() {
     const applyFiltersSoon = debounce(() => renderProducts(), 250);
     document.addEventListener('input', (event) => {
         const input = event.target.closest('[data-filter]');
-        if (!input || input.type === 'checkbox') return;
+        if (!input || input.type === 'checkbox' || input.tagName === 'SELECT') return;
         const cleaned = toEnglishDigits(input.value).replace(/\D/g, '');
         if (cleaned !== input.value) input.value = cleaned;
         state.filters[input.dataset.filter] = cleaned;
@@ -1182,8 +1293,8 @@ function bindEvents() {
     });
     document.addEventListener('change', (event) => {
         const input = event.target.closest('[data-filter]');
-        if (!input || input.type !== 'checkbox') return;
-        state.filters[input.dataset.filter] = input.checked;
+        if (!input || (input.type !== 'checkbox' && input.tagName !== 'SELECT')) return;
+        state.filters[input.dataset.filter] = input.type === 'checkbox' ? input.checked : input.value;
         syncFilterInputs();
         renderProducts();
     });
@@ -1200,6 +1311,19 @@ function bindEvents() {
         const remaining = list.length - Math.min(state.visible, list.length);
         el.loadMoreWrap.hidden = remaining <= 0;
         el.loadMoreBtn.textContent = `আরও পণ্য দেখুন (${formatNumber(remaining)}টি বাকি)`;
+    });
+
+    el.categoryToggle.addEventListener('click', () => {
+        state.categoriesExpanded = !state.categoriesExpanded;
+        renderCategories();
+    });
+
+    // Compact header: the search field slides open from the magnifier button
+    el.searchToggle.addEventListener('click', () => {
+        const open = el.siteHeader.classList.toggle('is-searching');
+        el.searchToggle.setAttribute('aria-expanded', open);
+        if (open) el.searchInput.focus();
+        else Search.close();
     });
 
     // Search
@@ -1283,16 +1407,23 @@ function bindEvents() {
     });
 
     // Page chrome
+    let scrollFrame = 0;
     const onScroll = () => {
-        el.backToTop.classList.toggle('is-visible', window.scrollY > CONFIG.SCROLL_TOP_THRESHOLD);
-        el.siteHeader.classList.toggle('is-scrolled', window.scrollY > 4);
+        if (scrollFrame) return;
+        scrollFrame = requestAnimationFrame(() => {
+            scrollFrame = 0;
+            el.backToTop.classList.toggle('is-visible', window.scrollY > CONFIG.SCROLL_TOP_THRESHOLD);
+            el.siteHeader.classList.toggle('is-scrolled', window.scrollY > 4);
+            updateActiveNav();
+        });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     el.backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
+    // The header floats 10px below the top edge, so sticky elements below it must clear height + 10px.
     new ResizeObserver(() =>
-        document.documentElement.style.setProperty('--header-h', `${el.siteHeader.offsetHeight}px`)
+        document.documentElement.style.setProperty('--header-h', `${el.siteHeader.offsetHeight + 10}px`)
     ).observe(el.siteHeader);
 
     // Keep tabs in sync
@@ -1302,6 +1433,79 @@ function bindEvents() {
     });
     window.addEventListener('offline', () => Toast.info('ইন্টারনেট সংযোগ নেই'));
     window.addEventListener('online', () => Toast.success('ইন্টারনেট সংযোগ ফিরে এসেছে'));
+}
+
+// ───────────────────────── Page polish (nav highlight, reveal, light, image fallback) ─────────────────────────
+
+const NAV_SECTIONS = ['home', 'categories', 'catalog', 'contact'];
+
+/** Highlights the header link of the section currently under the header. */
+function updateActiveNav() {
+    const probe = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) + 80 || 160;
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    let current = 'home';
+    for (const id of NAV_SECTIONS) {
+        const section = document.getElementById(id);
+        if (section && !section.hidden && section.getBoundingClientRect().top <= probe) current = id;
+    }
+    if (atBottom) current = 'contact';
+    $$('.nav-link').forEach((link) => {
+        const active = link.dataset.section === current;
+        link.classList.toggle('is-active', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+    });
+}
+
+/** Fade/slide sections in as they scroll into view. Content stays visible if JS or IntersectionObserver is missing. */
+function bindReveal() {
+    const items = $$('.reveal');
+    if (!('IntersectionObserver' in window)) return;
+    document.documentElement.classList.add('js-reveal');
+    const io = new IntersectionObserver(
+        (entries) =>
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-in');
+                io.unobserve(entry.target);
+            }),
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
+    );
+    items.forEach((item) => io.observe(item));
+}
+
+/** A soft cyan light follows the pointer over cards (mouse devices only, one rAF per frame). */
+function bindSpotlight() {
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    let frame = 0;
+    document.addEventListener(
+        'pointermove',
+        (event) => {
+            const card = event.target.closest?.('.product-card, .cat-card, .trust-item');
+            if (!card || frame) return;
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                const box = card.getBoundingClientRect();
+                card.style.setProperty('--mx', `${event.clientX - box.left}px`);
+                card.style.setProperty('--my', `${event.clientY - box.top}px`);
+            });
+        },
+        { passive: true }
+    );
+}
+
+/** `error` doesn't bubble, so listen in the capture phase: any broken product photo swaps to the dark placeholder once. */
+function bindImageFallback() {
+    document.addEventListener(
+        'error',
+        (event) => {
+            const node = event.target;
+            if (!(node instanceof HTMLImageElement) || node.dataset.fallback) return;
+            node.dataset.fallback = '1';
+            node.src = CONFIG.FALLBACK_IMAGE;
+        },
+        true
+    );
 }
 
 // ───────────────────────── Init ─────────────────────────
@@ -1314,7 +1518,9 @@ function init() {
         'loadMoreWrap', 'loadMoreBtn', 'recentSection', 'recentGrid', 'backToTop', 'cartPanel', 'cartBack',
         'cartTitle', 'cartList', 'cartFoot', 'cartSavings', 'couponForm', 'couponInput', 'couponApplied',
         'cartSummary', 'toCheckout', 'deliveryOptions', 'checkoutReview', 'checkoutSummary', 'placeOrderBtn',
-        'applyFilters', 'wishlistList', 'historyResults', 'successWhatsapp', 'copyOrderId', 'footerDelivery', 'year'
+        'applyFilters', 'wishlistList', 'historyResults', 'successWhatsapp', 'copyOrderId', 'footerDelivery', 'year',
+        'categoryGrid', 'categoryToggle', 'footerCategoriesWrap', 'footerCategories', 'heroStats',
+        'statProducts', 'statCategories', 'heroFloat', 'orderAlert', 'searchToggle'
     ].forEach((id) => (el[id] = document.getElementById(id)));
 
     Object.assign(dlg, {
@@ -1326,6 +1532,7 @@ function init() {
         success: $('#successDialog')
     });
     el.detailContent = $('#detailContent');
+    el.categorySection = $('#categories');
     Object.values(dlg).forEach(bindDialog);
 
     // Static copy driven by config
@@ -1351,6 +1558,9 @@ function init() {
     updateWishlistUI();
 
     bindEvents();
+    bindImageFallback();
+    bindSpotlight();
+    bindReveal();
     loadCatalog();
 }
 

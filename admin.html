@@ -173,6 +173,32 @@
                     <label for="fDesc">বিবরণ <span class="optional">(ঐচ্ছিক)</span></label>
                     <textarea id="fDesc" rows="4" placeholder="পণ্যের বিস্তারিত বিবরণ…"></textarea>
                 </div>
+                <!-- Shown only after the supplier-catalog SQL migration has added these columns (see README) -->
+                <fieldset class="field extra-fields" id="extraFields" hidden>
+                    <legend>স্টোরফ্রন্টের অতিরিক্ত তথ্য <span class="optional">(ঐচ্ছিক)</span></legend>
+                    <p class="muted" id="supplierNote" hidden>এটি সাপ্লায়ার থেকে ইমপোর্ট করা পণ্য। এখানে আপনি যে ঘরগুলো বদলাবেন, পরবর্তী সিঙ্কে সেগুলো আর স্বয়ংক্রিয়ভাবে বদলাবে না।</p>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="fBrand">ব্র্যান্ড</label>
+                            <input type="text" id="fBrand" maxlength="80" placeholder="যেমন: Hoco" />
+                        </div>
+                        <div class="field">
+                            <label for="fSku">SKU</label>
+                            <input type="text" id="fSku" maxlength="80" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="fImages">অতিরিক্ত ছবি <span class="optional">(প্রতি লাইনে একটি লিঙ্ক)</span></label>
+                        <textarea id="fImages" rows="3" placeholder="https://…/photo-2.jpg"></textarea>
+                        <p class="field-error" id="fImagesError"></p>
+                    </div>
+                    <div class="field">
+                        <label for="fSpecs">স্পেসিফিকেশন <span class="optional">(প্রতি লাইনে “নাম: মান”)</span></label>
+                        <textarea id="fSpecs" rows="4" placeholder="Battery: 500 mAh&#10;Bluetooth: 5.4"></textarea>
+                        <p class="field-error" id="fSpecsError"></p>
+                    </div>
+                    <label class="check"><input type="checkbox" id="fActive" checked /><span>স্টোরফ্রন্টে দেখান (বন্ধ করলে পণ্যটি ক্রেতাদের কাছে লুকানো থাকবে, অর্ডার ইতিহাস অক্ষত থাকবে)</span></label>
+                </fieldset>
             </div>
             <footer class="panel-foot panel-foot-row">
                 <button type="button" class="btn btn-outline btn-lg" data-close>বাতিল</button>

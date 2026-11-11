@@ -95,13 +95,18 @@ export function productCard(p, { qty = 0, wished = false, stat = null } = {}) {
         <div class="product-media" data-action="open-product" data-id="${esc(p.id)}">
             <img src="${img(p.image)}" alt="${esc(p.title)}" loading="lazy" decoding="async" width="400" height="400" />
             ${badge}
+            ${wishButton(p.id, wished)}
             ${multi ? `<span class="opt-badge">${formatNumber(p.variants.length)}টি অপশন</span>` : ''}
             ${low ? `<span class="stock-note">মাত্র ${formatNumber(left)}টি বাকি</span>` : ''}
-            ${wishButton(p.id, wished)}
+            <button type="button" class="quick-view" data-action="open-product" data-id="${esc(p.id)}" aria-label="দ্রুত দেখুন: ${esc(p.title)}" title="দ্রুত দেখুন">${icon('eye')}</button>
         </div>
         <div class="product-body">
+            <div class="meta-row">
+                ${p.category ? `<span class="product-cat" title="${esc(p.category)}">${esc(p.category)}</span>` : '<span></span>'}
+                <div class="rating-slot" data-slot="rating">${ratingBadge(stat)}</div>
+            </div>
             <h3 class="product-title"><button type="button" class="product-link" title="${esc(p.title)}" data-action="open-product" data-id="${esc(p.id)}">${esc(p.title)}</button></h3>
-            <div class="rating-slot" data-slot="rating">${ratingBadge(stat)}</div>
+            ${p.brand ? `<p class="product-brand">${esc(p.brand)}</p>` : ''}
             <div class="price-row">
                 ${hasPriceRange(p) ? '<span class="price-from">থেকে</span>' : ''}
                 <span class="price">${formatPrice(p.price)}</span>
@@ -123,9 +128,38 @@ export const skeletonCard = () => `<div class="product-card skeleton-card" aria-
     <div class="product-cta"><span class="skeleton btn-skel"></span></div>
 </div>`;
 
+// ───────────────────────── Categories & hero ─────────────────────────
+
+/** Category tile. `image` is a real product photo from that category (or '' → icon only). */
+export function categoryCard(key, label, count, image, active) {
+    return `<button type="button" class="cat-card ${active ? 'is-active' : ''} ${image ? '' : 'no-image'}" data-action="filter-category" data-id="${esc(key)}" aria-pressed="${active}">
+        <span class="cat-media">
+            ${image ? `<img src="${esc(image)}" alt="" loading="lazy" decoding="async" width="320" height="240" />` : ''}
+            <span class="cat-icon">${icon(categoryIcon(label))}</span>
+        </span>
+        <span class="cat-info">
+            <strong>${esc(label)}</strong>
+            <small>${formatNumber(count)}টি পণ্য</small>
+        </span>
+        <span class="cat-go" aria-hidden="true">${icon('arrow-up-right')}</span>
+    </button>`;
+}
+
+/** Small floating product chip in the hero (real catalog data only). */
+export function heroFloatCard(p, index) {
+    return `<button type="button" class="float-card float-${index}" data-action="open-product" data-id="${esc(p.id)}" aria-label="${esc(p.title)} — ${formatPrice(p.price)}">
+        <img src="${img(p.image)}" alt="" width="52" height="52" loading="lazy" decoding="async" />
+        <span><strong>${esc(p.title)}</strong><small>${formatPrice(p.price)}</small></span>
+    </button>`;
+}
+
+export const footerCategoryLink = (key, label) =>
+    `<li><button type="button" class="link-btn" data-action="filter-category" data-id="${esc(key)}">${esc(label)}</button></li>`;
+
 // ───────────────────────── Product detail ─────────────────────────
 
-export function detailActions(p, v, qty, wished = false) {
+/** `pending` is the quantity chosen BEFORE adding to the cart (once the line exists, the cart stepper takes over). */
+export function detailActions(p, v, qty, wished = false, pending = 1) {
     const wish = wishButton(p.id, wished, 'wish-inline');
     if (hasVariants(p) && !v) {
         if (isSoldOut(p)) return `<div class="detail-actions"><button type="button" class="btn btn-primary btn-lg" disabled>স্টক নেই</button>${wish}</div>`;
@@ -135,17 +169,27 @@ export function detailActions(p, v, qty, wished = false) {
         return `<div class="detail-actions"><button type="button" class="btn btn-primary btn-lg" disabled>স্টক নেই</button>${wish}</div>`;
     }
     const attrs = `data-id="${esc(p.id)}"${v ? ` data-variant="${esc(v.id)}"` : ''}`;
+    const max = stockOf(p, v);
     if (qty > 0) {
         return `<div class="detail-actions">
-            ${qtyControl(lineKey(p.id, v?.id), qty, stockOf(p, v), 'qty-lg')}
+            ${qtyControl(lineKey(p.id, v?.id), qty, max, 'qty-lg')}
             <button type="button" class="btn btn-primary btn-lg" data-action="open-cart">কার্ট দেখুন</button>
             ${wish}
         </div>`;
     }
     return `<div class="detail-actions">
-        <button type="button" class="btn btn-primary btn-lg" data-action="add-to-cart" ${attrs}>${icon('shopping-bag')}কার্টে যোগ করুন</button>
-        <button type="button" class="btn btn-brand btn-lg" data-action="buy-now" ${attrs}>এখনই কিনুন</button>
-        ${wish}
+        <div class="detail-qty-row">
+            <div class="qty qty-lg" role="group" aria-label="পরিমাণ">
+                <button type="button" class="qty-btn" data-action="detail-qty-dec" data-id="${esc(p.id)}" aria-label="কমান" ${pending <= 1 ? 'disabled' : ''}>${icon('minus')}</button>
+                <output class="qty-val" aria-live="polite">${formatNumber(pending)}</output>
+                <button type="button" class="qty-btn" data-action="detail-qty-inc" data-id="${esc(p.id)}" aria-label="বাড়ান" ${pending >= max ? 'disabled' : ''}>${icon('plus')}</button>
+            </div>
+            ${wish}
+        </div>
+        <div class="detail-buy-row">
+            <button type="button" class="btn btn-primary btn-lg" data-action="add-to-cart" ${attrs}>${icon('shopping-bag')}কার্টে যোগ করুন</button>
+            <button type="button" class="btn btn-outline btn-lg" data-action="buy-now" ${attrs}>এখনই কিনুন</button>
+        </div>
     </div>`;
 }
 
@@ -165,8 +209,28 @@ function optionPicker(p, v) {
     </fieldset>`;
 }
 
+/** Thumbnail strip — only rendered when the product really has more than one photo. */
+function galleryThumbs(p, activeIndex) {
+    if (p.gallery.length < 2) return '';
+    return `<div class="gallery" role="group" aria-label="পণ্যের ছবি">${p.gallery
+        .map(
+            (src, i) =>
+                `<button type="button" class="thumb ${i === activeIndex ? 'is-active' : ''}" data-action="select-image" data-index="${i}" aria-label="ছবি ${formatNumber(i + 1)}" aria-pressed="${i === activeIndex}"><img src="${img(src)}" alt="" width="64" height="64" loading="lazy" decoding="async" /></button>`
+        )
+        .join('')}</div>`;
+}
+
+/** Specifications come straight from the product record ([{label, value}]) — nothing is invented. */
+function specsTable(p) {
+    if (!p.specs.length) return '';
+    return `<section class="specs" aria-labelledby="specsTitle">
+        <h3 id="specsTitle">বিবরণ ও স্পেসিফিকেশন</h3>
+        <dl>${p.specs.map((s) => `<div><dt>${esc(s.label)}</dt><dd>${esc(s.value)}</dd></div>`).join('')}</dl>
+    </section>`;
+}
+
 /** The top half of the dialog; re-rendered when an option is picked (reviews below are left alone). */
-export function detailMain(p, { variantId = null, qty = 0, wished = false, stat = null, deliveryNote = '' } = {}) {
+export function detailMain(p, { variantId = null, qty = 0, wished = false, stat = null, deliveryNote = '', pending = 1, imageIndex = 0 } = {}) {
     const v = variantOf(p, variantId);
     const shownPrice = v ? priceOf(p, v) : p.price;
     const shownOld = v ? oldPriceOf(p, v) : p.oldPrice;
@@ -178,23 +242,34 @@ export function detailMain(p, { variantId = null, qty = 0, wished = false, stat 
     const low = !sold && Number.isFinite(left) && left <= CONFIG.LOW_STOCK_THRESHOLD && (v || !hasVariants(p));
     const stockClass = sold ? 'is-out' : low ? 'is-low' : 'is-in';
     const stockText = sold ? 'স্টক নেই' : low ? `মাত্র ${formatNumber(left)}টি বাকি — দ্রুত অর্ডার করুন` : 'স্টকে আছে';
-    const image = v?.image || p.image;
+    const image = v?.image || p.gallery[imageIndex] || p.image;
 
     return `<div class="detail-grid">
-        <div class="detail-media"><img src="${img(image)}" alt="${esc(p.title)}" width="640" height="640" /></div>
+        <div class="detail-visual">
+            <div class="detail-media">
+                <img id="detailImg" src="${img(image)}" alt="${esc(p.title)}" width="640" height="640" decoding="async" />
+                ${pct ? `<span class="badge badge-sale">−${formatNumber(pct)}%</span>` : ''}
+            </div>
+            ${galleryThumbs(p, v?.image ? -1 : imageIndex)}
+        </div>
         <div class="detail-info">
-            ${p.category ? `<span class="product-cat">${esc(p.category)}</span>` : ''}
+            <div class="detail-tags">
+                ${p.brand ? `<span class="tag tag-brand">${esc(p.brand)}</span>` : ''}
+                ${p.category ? `<span class="product-cat">${esc(p.category)}</span>` : ''}
+            </div>
             <h2 class="detail-title">${esc(p.title)}</h2>
+            ${p.sku ? `<p class="detail-sku muted">SKU: ${esc(p.sku)}</p>` : ''}
             <div class="detail-rating" id="detailRating">${stat?.count ? `${starRow(stat.avg)}<span>${stat.avg.toFixed(1)} · ${formatNumber(stat.count)}টি রিভিউ</span>` : '<span class="muted">এখনো কোনো রিভিউ নেই</span>'}</div>
             <div class="detail-price">
                 ${range ? '<span class="price-from">থেকে</span>' : ''}
                 <span class="price price-lg">${formatPrice(shownPrice)}</span>
-                ${pct ? `<span class="price-old">${formatPrice(shownOld)}</span><span class="badge badge-sale">−${formatNumber(pct)}% ছাড়</span>` : ''}
+                ${pct ? `<span class="price-old">${formatPrice(shownOld)}</span><span class="save-chip">−${formatNumber(pct)}% ছাড়</span>` : ''}
             </div>
             <p class="stock-pill ${stockClass}"><span class="dot"></span>${esc(stockText)}</p>
             ${hasVariants(p) ? optionPicker(p, v) : ''}
-            <div id="detailActions" data-pid="${esc(p.id)}">${detailActions(p, v, qty, wished)}</div>
+            <div id="detailActions" data-pid="${esc(p.id)}">${detailActions(p, v, qty, wished, pending)}</div>
             ${p.description ? `<p class="detail-desc">${esc(p.description)}</p>` : ''}
+            ${specsTable(p)}
             <ul class="perks">
                 <li>${icon('truck')}<span>${esc(deliveryNote)}</span></li>
                 <li>${icon('headset')}<span>অর্ডার নিয়ে প্রশ্ন? হোয়াটসঅ্যাপে মেসেজ করুন</span></li>
@@ -270,11 +345,11 @@ export function cartItem(item, product) {
     </li>`;
 }
 
-export function summaryRows({ subtotal, discount = 0, couponCode = '', delivery = null, total = null, totalLabel = 'সর্বমোট', totalOnly = false }) {
+export function summaryRows({ subtotal, discount = 0, couponCode = '', delivery = null, deliveryLabel = '', total = null, totalLabel = 'সর্বমোট', totalOnly = false }) {
     const rows = totalOnly ? [] : [`<div class="sum-row"><dt>পণ্যের মূল্য</dt><dd>${formatPrice(subtotal)}</dd></div>`];
     if (!totalOnly && discount > 0)
         rows.push(`<div class="sum-row sum-save"><dt>কুপন (${esc(couponCode)})</dt><dd>−${formatPrice(discount)}</dd></div>`);
-    if (!totalOnly && delivery !== null) rows.push(`<div class="sum-row"><dt>ডেলিভারি চার্জ</dt><dd>${formatPrice(delivery)}</dd></div>`);
+    if (!totalOnly && delivery !== null) rows.push(`<div class="sum-row"><dt>ডেলিভারি চার্জ${deliveryLabel ? ` <small>(${esc(deliveryLabel)})</small>` : ''}</dt><dd>${formatPrice(delivery)}</dd></div>`);
     if (total !== null) rows.push(`<div class="sum-row sum-total"><dt>${esc(totalLabel)}</dt><dd>${formatPrice(total)}</dd></div>`);
     return rows.join('');
 }
@@ -361,27 +436,45 @@ export function orderCard(o) {
 
 // ───────────────────────── Filters ─────────────────────────
 
-export function filterPanel({ min = '', max = '', discount = false, stock = false, priceBounds = null, showHead = true }) {
+/**
+ * `brands` is the list of real brand names found in the catalog (empty → no brand filter is shown).
+ * `idSuffix` keeps label ids unique because the panel is rendered twice (toolbar + mobile sheet).
+ */
+export function filterPanel({ min = '', max = '', discount = false, stock = false, brand = 'all', brands = [], priceBounds = null, showHead = true }) {
     const ph = (v) => (v === undefined || v === null ? '' : formatNumber(v));
+    const sx = showHead ? 'a' : 'b';
     return `<div class="filter-panel">
         ${
             showHead
                 ? `<div class="filter-head"><h3>ফিল্টার</h3><button type="button" class="link-btn" data-action="reset-filters">রিসেট</button></div>`
                 : ''
         }
-        <fieldset class="filter-block">
-            <legend>দামের পরিসর (৳)</legend>
+        <div class="filter-block" role="group" aria-labelledby="fl-price-${sx}">
+            <span class="filter-label" id="fl-price-${sx}">দামের পরিসর (৳)</span>
             <div class="range">
                 <input type="text" inputmode="numeric" data-filter="min" value="${esc(min)}" placeholder="${priceBounds ? ph(priceBounds.min) : 'সর্বনিম্ন'}" aria-label="সর্বনিম্ন দাম" />
                 <span aria-hidden="true">–</span>
                 <input type="text" inputmode="numeric" data-filter="max" value="${esc(max)}" placeholder="${priceBounds ? ph(priceBounds.max) : 'সর্বোচ্চ'}" aria-label="সর্বোচ্চ দাম" />
             </div>
-        </fieldset>
-        <fieldset class="filter-block">
-            <legend>অফার ও প্রাপ্যতা</legend>
-            <label class="check"><input type="checkbox" data-filter="discount" ${discount ? 'checked' : ''} /><span>শুধু ছাড়ের পণ্য</span></label>
-            <label class="check"><input type="checkbox" data-filter="stock" ${stock ? 'checked' : ''} /><span>শুধু স্টকে আছে</span></label>
-        </fieldset>
+        </div>
+        ${
+            brands.length
+                ? `<div class="filter-block" role="group" aria-labelledby="fl-brand-${sx}">
+            <label class="filter-label" id="fl-brand-${sx}" for="brandSelect-${sx}">ব্র্যান্ড</label>
+            <select id="brandSelect-${sx}" class="select select-sm" data-filter="brand">
+                <option value="all">সব ব্র্যান্ড</option>
+                ${brands.map((b) => `<option value="${esc(b.key)}" ${b.key === brand ? 'selected' : ''}>${esc(b.label)} (${formatNumber(b.count)})</option>`).join('')}
+            </select>
+        </div>`
+                : ''
+        }
+        <div class="filter-block" role="group" aria-labelledby="fl-offer-${sx}">
+            <span class="filter-label" id="fl-offer-${sx}">অফার ও প্রাপ্যতা</span>
+            <div class="filter-checks">
+                <label class="check"><input type="checkbox" data-filter="discount" ${discount ? 'checked' : ''} /><span>শুধু ছাড়ের পণ্য</span></label>
+                <label class="check"><input type="checkbox" data-filter="stock" ${stock ? 'checked' : ''} /><span>শুধু স্টকে আছে</span></label>
+            </div>
+        </div>
     </div>`;
 }
 

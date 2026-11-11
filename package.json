@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supplier:validate": "node scripts/supplier/import.mjs validate",
+    "supplier:import": "node --env-file=.env.supplier scripts/supplier/import.mjs import",
+    "supplier:report": "node --env-file=.env.supplier scripts/supplier/import.mjs report",
+    "supplier:test": "node --test scripts/supplier/test/engine.test.mjs scripts/supplier/test/migration.test.mjs"
   },
   "devDependencies": {
     "vite": "^8.0.12"
