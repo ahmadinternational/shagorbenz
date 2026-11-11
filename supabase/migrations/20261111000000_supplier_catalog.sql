@@ -82,6 +82,12 @@ begin
 end
 $$;
 
+-- Added after the first draft: safe to re-run on a database that already has the table.
+alter table public.supplier_products
+  add column if not exists min_selling_price numeric(12,2);
+
+comment on column public.supplier_products.supplier_price is 'What SHAGORBENZ pays the supplier (the reseller "buy rate"). Private — never sent to the storefront.';
+comment on column public.supplier_products.min_selling_price is 'Lowest price the supplier allows a reseller to sell at. Private.';
 comment on column public.supplier_products.last_import_price is 'Selling price the importer last wrote to products.price — if products.price differs, an admin changed it and sync leaves it alone.';
 comment on column public.supplier_products.missing_runs is 'Consecutive COMPLETE catalog runs in which the supplier no longer listed this product.';
 
@@ -150,11 +156,11 @@ begin
 
   insert into public.supplier_products
     (supplier, supplier_product_id, product_id, supplier_product_url, canonical_url, supplier_category, supplier_title,
-     supplier_price, supplier_regular_price, supplier_stock_status, supplier_stock_quantity, last_import_price,
+     supplier_price, supplier_regular_price, min_selling_price, supplier_stock_status, supplier_stock_quantity, last_import_price,
      content_hash, import_status, missing_runs, last_seen_at, supplier_last_synced_at)
   select
     m.supplier, m.supplier_product_id, r.id, m.supplier_product_url, m.canonical_url, m.supplier_category, m.supplier_title,
-    m.supplier_price, m.supplier_regular_price, coalesce(m.supplier_stock_status, 'unknown'), m.supplier_stock_quantity,
+    m.supplier_price, m.supplier_regular_price, m.min_selling_price, coalesce(m.supplier_stock_status, 'unknown'), m.supplier_stock_quantity,
     m.last_import_price, m.content_hash, 'imported', 0, now(), now()
   from jsonb_populate_record(null::public.supplier_products, p_mapping) m;
 

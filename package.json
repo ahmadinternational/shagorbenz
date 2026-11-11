@@ -10,7 +10,9 @@
     "supplier:validate": "node scripts/supplier/import.mjs validate",
     "supplier:import": "node --env-file=.env.supplier scripts/supplier/import.mjs import",
     "supplier:report": "node --env-file=.env.supplier scripts/supplier/import.mjs report",
-    "supplier:test": "node --test scripts/supplier/test/engine.test.mjs scripts/supplier/test/migration.test.mjs"
+    "supplier:test": "node --test scripts/supplier/test/engine.test.mjs scripts/supplier/test/public-page.test.mjs scripts/supplier/test/migration.test.mjs",
+    "supplier:collect": "node scripts/supplier/collect-public-site.mjs --out supplier-feeds",
+    "supplier:build-feed": "node scripts/supplier/build-feed.mjs --dir supplier-feeds"
   },
   "devDependencies": {
     "vite": "^8.0.12"

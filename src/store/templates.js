@@ -54,12 +54,19 @@ export function qtyControl(key, qty, max = Infinity, size = '') {
 
 // ───────────────────────── Product card ─────────────────────────
 
+/** A product with exactly ONE option (e.g. only "Black") has nothing to choose, so its card adds that option directly. */
+export const soleVariant = (p) => (p.variants.length === 1 ? p.variants[0] : null);
+/** Cart-line key a product card controls (the option's line for a sole-option product). */
+export const cardLineKey = (p) => lineKey(p.id, soleVariant(p)?.id);
+
+/** `qty` = how many of cardLineKey(p) are in the cart. */
 export function cardAction(p, qty) {
     if (isSoldOut(p)) return `<button type="button" class="btn btn-add" disabled>স্টক নেই</button>`;
-    if (hasVariants(p))
+    const sole = soleVariant(p);
+    if (hasVariants(p) && !sole)
         return `<button type="button" class="btn btn-add" data-action="open-product" data-id="${esc(p.id)}">অপশন বাছুন</button>`;
-    if (qty > 0) return qtyControl(p.id, qty, stockOf(p));
-    return `<button type="button" class="btn btn-add" data-action="add-to-cart" data-id="${esc(p.id)}">${icon('shopping-bag')}কার্টে যোগ করুন</button>`;
+    if (qty > 0) return qtyControl(cardLineKey(p), qty, stockOf(p, sole));
+    return `<button type="button" class="btn btn-add" data-action="add-to-cart" data-id="${esc(p.id)}"${sole ? ` data-variant="${esc(sole.id)}"` : ''}>${icon('shopping-bag')}কার্টে যোগ করুন</button>`;
 }
 
 export function wishButton(id, active, extra = '') {
@@ -81,7 +88,7 @@ function swatches(p) {
 
 export function productCard(p, { qty = 0, wished = false, stat = null } = {}) {
     const sold = isSoldOut(p);
-    const multi = hasVariants(p);
+    const multi = p.variants.length > 1; // a single option is not a choice → no "options" badge / swatches
     const pct = discountPercent(p);
     const left = stockOf(p);
     const low = !sold && !multi && left <= CONFIG.LOW_STOCK_THRESHOLD;
@@ -386,7 +393,7 @@ export function wishlistItem(p) {
             <button type="button" class="product-link" data-action="open-product" data-id="${esc(p.id)}">${esc(p.title)}</button>
             <span class="price">${hasPriceRange(p) ? 'থেকে ' : ''}${formatPrice(p.price)}</span>
         </div>
-        <button type="button" class="btn btn-outline btn-sm" data-action="wishlist-to-cart" data-id="${esc(p.id)}" ${sold ? 'disabled' : ''}>${sold ? 'স্টক নেই' : hasVariants(p) ? 'অপশন বাছুন' : 'কার্টে নিন'}</button>
+        <button type="button" class="btn btn-outline btn-sm" data-action="wishlist-to-cart" data-id="${esc(p.id)}" ${sold ? 'disabled' : ''}>${sold ? 'স্টক নেই' : p.variants.length > 1 ? 'অপশন বাছুন' : 'কার্টে নিন'}</button>
         <button type="button" class="icon-btn icon-btn-sm" data-action="toggle-wishlist" data-id="${esc(p.id)}" aria-label="${esc(p.title)} সরান">${icon('x')}</button>
     </li>`;
 }

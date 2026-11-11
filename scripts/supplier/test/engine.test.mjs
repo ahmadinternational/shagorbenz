@@ -185,6 +185,24 @@ test('supplier category is kept separately; a category map renames only the stor
     assert.equal(repo.db.products[0].category, 'TWS Earbuds');
     assert.equal(repo.db.mappings[0].supplier_category, 'Electronics / Earbuds');
 });
+test('storefront_category (chosen by SHAGORBENZ) is used for the shop, while the supplier category stays empty/untouched', async () => {
+    const repo = createMemoryRepo();
+    await run(repo, feed(1, () => ({ category: undefined, storefront_category: 'Power Bank' })));
+    assert.equal(repo.db.products[0].category, 'Power Bank');
+    assert.equal(repo.db.mappings[0].supplier_category, null, 'never presented as a supplier category');
+});
+test('buy rate (what we pay) and minimum selling price go to the PRIVATE mapping; the shop price is the proposed selling price', async () => {
+    const repo = createMemoryRepo();
+    await run(repo, feed(1, () => ({ price: 1209, supplier_price: 699, min_selling_price: 749 })));
+    assert.equal(repo.db.products[0].price, 1209);
+    assert.equal(repo.db.mappings[0].supplier_price, 699);
+    assert.equal(repo.db.mappings[0].min_selling_price, 749);
+    assert.ok(!('supplier_price' in repo.db.products[0]) && !('min_selling_price' in repo.db.products[0]));
+    // a later buy-rate change updates only the private value
+    await run(repo, feed(1, () => ({ price: 1209, supplier_price: 650, min_selling_price: 700 })));
+    assert.equal(repo.db.mappings[0].supplier_price, 650);
+    assert.equal(repo.db.products[0].price, 1209);
+});
 test('supplier cost/URL/status never appear on the public product row', async () => {
     const repo = createMemoryRepo();
     await run(repo, feed(1));

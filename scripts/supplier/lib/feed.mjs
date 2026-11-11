@@ -144,9 +144,13 @@ export function normalizeProduct(raw, { supplier }) {
         description: text(raw.description),
         category: categoryPath.at(-1) || '',
         supplierCategory: categoryPath.join(' / ') || null,
+        // a category chosen by SHAGORBENZ (rules / a person), kept apart from the supplier's own category
+        storefrontCategory: text(raw.storefront_category),
         brand: nullable(raw.brand),
         sku: nullable(raw.sku),
-        price,
+        price, // the selling price proposed for the shop
+        supplierPrice: parseMoney(raw.supplier_price ?? raw.buy_rate), // what SHAGORBENZ pays (private); falls back to `price`
+        minSellingPrice: parseMoney(raw.min_selling_price),
         regularPrice: regular !== null && regular > price ? regular : null,
         images,
         variants: normalizeVariants(raw.variants),
@@ -161,6 +165,7 @@ export function normalizeProduct(raw, { supplier }) {
 export function contentHash(r) {
     const body = {
         title: r.title, description: r.description, category: r.category, brand: r.brand, sku: r.sku, price: r.price,
+        supplierPrice: r.supplierPrice, minSellingPrice: r.minSellingPrice,
         regularPrice: r.regularPrice, images: r.images, variants: r.variants, specifications: r.specifications,
         stockStatus: r.stockStatus, stockQuantity: r.stockQuantity
     };

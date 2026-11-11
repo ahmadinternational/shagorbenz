@@ -309,7 +309,7 @@ const MyOrders = {
 // ───────────────────────── Catalog ─────────────────────────
 
 const productCardFor = (p) =>
-    T.productCard(p, { qty: cartQty(p.id), wished: isWished(p.id), stat: state.stats.get(p.id) });
+    T.productCard(p, { qty: cartQty(T.cardLineKey(p)), wished: isWished(p.id), stat: state.stats.get(p.id) });
 
 function searchProducts(query) {
     const full = query.toLowerCase().trim();
@@ -580,7 +580,7 @@ function refreshCardActions() {
     $$('.product-card[data-product-id]').forEach((card) => {
         const p = getProduct(card.dataset.productId);
         const slot = $('[data-slot="cta"]', card);
-        if (p && slot) slot.innerHTML = T.cardAction(p, cartQty(p.id));
+        if (p && slot) slot.innerHTML = T.cardAction(p, cartQty(T.cardLineKey(p)));
     });
 }
 
@@ -1201,12 +1201,12 @@ const ACTIONS = {
     'wishlist-to-cart': async (id) => {
         const p = getProduct(id);
         if (!p) return;
-        if (api.hasVariants(p)) {
+        if (p.variants.length > 1) {
             // Needs an option choice → show the product instead of guessing.
             if (dlg.wishlist.open) await closeDialog(dlg.wishlist);
             return openDetail(id);
         }
-        if (Cart.add(id)) Wishlist.toggle(id);
+        if (Cart.add(id, { variantId: p.variants[0]?.id || null })) Wishlist.toggle(id); // a sole option is added directly
     },
     'select-variant': (_id, target) => selectVariant(target.dataset.variant),
     'need-option': () => {

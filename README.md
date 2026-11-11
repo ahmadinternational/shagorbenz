@@ -83,7 +83,7 @@ Name, mobile, optional alternate mobile, district (all 64), thana/upazila and ad
 
 * `robots.txt` allows ordinary crawlers (`User-agent: *`, `Allow: /`) and blocks named AI-training bots.
 * Badhon's World / **MayonsBd** is a **closed reseller programme**. Its public *Seller Terms* say product photos/videos are distributed to resellers through a login-gated reseller panel/private group, that **any MayonsBd image or video may only be shared WITH its watermark**, and that panel access must not be shared. Nothing public says the catalog may be bulk-copied; the shop loads its products from a separate JSON API that is not documented.
-* So this project **does not scrape**. The importer reads an **export you are authorized to use** (reseller panel download, or a feed/CSV the supplier gives you) — see "What I need from you".
+* The **importer itself never contacts the supplier**: it reads a feed file (JSON/JSONL/CSV) — ideally an export the supplier gives you. When none exists, a separate, polite collector can build that file from the public pages (and, with your own login, the reseller prices) — see "Collecting the catalog from the supplier's website" below. Whether you may republish their photos and text is a question for the supplier; the watermark must stay.
 * Images are stored **by URL only** (never re-hosted, cropped or edited), so the supplier's watermark is preserved exactly as served.
 
 ### One-time database setup
@@ -148,11 +148,32 @@ Rows that cannot be trusted (no id, price ≤ 0, no usable image, bad URL) are *
 
 Source badge (SHAGORBENZ / Badhon's World), show/hide toggle, brand/SKU/extra photos/specifications/visibility fields, and recording of hand-edited fields — all appear once the migration has run. **Import buttons and the import-history view are deliberately not in the browser admin.** The admin signs in against a plaintext `admins` table using the public key (see below), so nothing in the browser can securely authorize a privileged import or be allowed to read supplier cost prices. Use `supplier:import` / `supplier:report`; the in-browser version should come after the admin moves to Supabase Auth.
 
-### What I need from you to run the real import
+### Collecting the catalog from the supplier's website (no API)
 
-1. Run the migration (above).
-2. An export of the catalog you are **entitled to use** — ask Badhon's World/MayonsBd for a product feed/CSV (the reseller panel is where they say product data and photos are shared), in the format above (or send me the file's columns and I'll add a mapping).
-3. The **service-role key** in `.env.supplier` on the machine that runs the import (do not paste it into chat or commit it).
+When no feed is available, the public pages can be read the way a visitor sees them. This needs a browser driver that is **not** a project dependency: `npm i --no-save playwright-core` and Chrome/Chromium (`CHROME_PATH`, default `/usr/bin/google-chrome`).
+
+```bash
+npm run supplier:collect                      # public pages → supplier-feeds/raw   (≈ 2 s pause per page; resumable)
+SUPPLIER_LOGIN=01XXXXXXXXX SUPPLIER_PASSWORD='…' \
+  node scripts/supplier/collect-public-site.mjs --out supplier-feeds --reseller   # YOUR reseller login → raw-reseller
+npm run supplier:build-feed                   # → supplier-feeds/badhons-world.json + build-report.json
+npm run supplier:validate -- --file supplier-feeds/badhons-world.json
+```
+
+* It reads only what the pages show — never the site's JSON API, never CAPTCHA/Cloudflare tricks — and does not download images (only their addresses). Interrupted runs continue where they stopped.
+* `--reseller` signs in **once** with your own account (credentials only from the environment; nothing is written to disk), opens the same product pages, and signs out. The supplier's reseller terms forbid sharing panel access with others, so use your own login and change the password if it was ever shared in chat/email.
+* **Prices.** The signed-in page shows *Buy rate* (what you pay), *Commission* and *Minimum selling price*. These go to the **private** `supplier_products` table (`supplier_price`, `min_selling_price`) and are never sent to the browser. The shop's initial selling price is the **lower of the supplier's public price and the price it shows resellers, never below its minimum selling price** (`--selling-price lowest`, default — so the supplier's own website can never undercut the shop); `reseller` / `public` are the alternatives. Change prices afterwards in the admin panel (it does not know the private minimum, so do not go below it). The supplier's "previous price" is *its* list price, which this shop never charged, so it is **not** shown as a discount unless you pass `--keep-old-price`. `build-feed` reports any row whose price is below the minimum or below the buy rate (currently none).
+* Products the supplier lists with **price ৳0** are not priced yet; the importer refuses them (`unpricedAtSupplier` in the report) and re-tries them with `--retry-failed` once they have a price.
+* The shop publishes **no category**, so categories come from the keyword rules in [scripts/supplier/category-rules.json](scripts/supplier/category-rules.json) (editable; they reuse your existing names such as *Power Bank*, *Lamp*, *Fan*). The supplier's own category stays empty.
+* Descriptions drop the supplier's warranty/return-policy footer and "inbox Badhon's World to order" lines (so customers are not sent to the supplier); "Technical specifications" bullet lists move into the specifications table. The untouched original pages stay in `supplier-feeds/raw*`.
+* Products with exactly one option (e.g. only "Black") are added to the cart straight from the card; the option is still written to the order item.
+* `supplier-feeds/` and `.supplier-state/` are git-ignored because they contain your buy rates.
+
+### Importing into Supabase
+
+1. Run the migration (above) — it is safe to run again after an update.
+2. Put the **service-role key** in `.env.supplier` on the machine that runs the import (never in chat, never committed).
+3. `npm run supplier:import -- --file supplier-feeds/badhons-world.json --dry-run`, then without `--dry-run` and with `--complete` (this file is the whole public catalog), then `npm run supplier:report`.
 
 ## Things to harden on the Supabase side
 
